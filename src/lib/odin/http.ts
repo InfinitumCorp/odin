@@ -1,0 +1,88 @@
+import { ZodError } from "zod";
+import { askSchema, decideSchema, draftSchema, roleSchema, taskSchema, trafficSchema } from "./schemas.ts";
+import { getOdin } from "./store.server.ts";
+
+function json(body: unknown, status = 200) {
+  return Response.json(body, { status });
+}
+
+function fail(error: unknown) {
+  if (error instanceof ZodError) {
+    return json({ ok: false, error: "The request is missing a role or a required field." }, 400);
+  }
+  const message = error instanceof Error ? error.message : "The exercise backend failed.";
+  return json({ ok: false, error: message }, 500);
+}
+
+/**
+ * HTTP contract for the ODIN° exercise backend.
+ * GET  /api/odin/health
+ * GET  /api/odin/picture?role=observer|analyst|commander
+ * GET  /api/odin/ledger?role=
+ * POST /api/odin/ask        { role, question }
+ * POST /api/odin/courses    { role }
+ * POST /api/odin/decisions  { role, courseId, decision, note? }
+ * POST /api/odin/tasks      { role, taskId, status }
+ * POST /api/odin/traffic    { role, to, body }
+ */
+export async function handleOdinRequest(request: Request, splat: string): Promise<Response> {
+  const path = splat.replace(/^\/+|\/+$/g, "");
+  const url = new URL(request.url);
+  try {
+    const odin = await getOdin();
+    if (request.method === "GET" && (path === "health" || path === "")) {
+      const verify = await odin.verify();
+      return json({
+        ok: verify.ok,
+        product: "ODIN°",
+        exercise: "NORTHLANTERN",
+        ledger: verify,
+        note: "Simulated exercise. Not for operational use. Private ledger. No data sale.",
+      });
+    }
+    if (request.method === "GET" && path === "picture") {
+      const role = roleSchema.parse(url.searchParams.get("role"));
+      return json(await odin.picture(role));
+    }
+    if (request.method === "GET" && path === "ledger") {
+      const role = roleSchema.parse(url.searchParams.get("role"));
+      const picture = await odin.picture(role);
+      return json({
+        ok: picture.ledgerOk,
+        head: picture.ledgerHead,
+        length: picture.ledgerLength,
+        entries: picture.ledger,
+      });
+    }
+    if (request.method !== "POST") return json({ ok: false, error: "Not found." }, 404);
+
+    const body: unknown = await request.json().catch(() => ({}));
+    if (path === "ask") {
+      const data = askSchema.parse(body);
+      return json(await odin.ask(data.role, data.question));
+    }
+    if (path === "courses") {
+      const data = draftSchema.parse(body);
+      const result = await odin.draft(data.role);
+      return json(result, result.ok ? 200 : 403);
+    }
+    if (path === "decisions") {
+      const data = decideSchema.parse(body);
+      const result = await odin.decide(data.role, data.courseId, data.decision, data.note);
+      return json(result, result.ok ? 200 : 403);
+    }
+    if (path === "tasks") {
+      const data = taskSchema.parse(body);
+      const result = await odin.advanceTask(data.role, data.taskId, data.status);
+      return json(result, result.ok ? 200 : 403);
+    }
+    if (path === "traffic") {
+      const data = trafficSchema.parse(body);
+      const result = await odin.sendTraffic(data.role, data.to, data.body);
+      return json(result, result.ok ? 200 : 403);
+    }
+    return json({ ok: false, error: "Not found." }, 404);
+  } catch (error) {
+    return fail(error);
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "odin",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.18" },
+  "scripts": {
+    "test": "node --experimental-strip-types --test src/lib/odin/service.test.ts"
+  }
+}

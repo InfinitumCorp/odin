@@ -1,0 +1,23 @@
+import { handleOdinRequest } from "./lib/odin/http.ts";
+
+/**
+ * Cloudflare Worker entry for the ODIN° exercise API.
+ * The same handler serves /api/odin/* inside the console.
+ */
+export default {
+  async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    const prefix = "/api/odin";
+    if (url.pathname === prefix || url.pathname.startsWith(`${prefix}/`)) {
+      const splat = url.pathname.slice(prefix.length).replace(/^\//, "");
+      return handleOdinRequest(request, splat);
+    }
+    if (url.pathname === "/health") {
+      return handleOdinRequest(request, "health");
+    }
+    return new Response("ODIN° exercise API. GET /api/odin/health", {
+      status: url.pathname === "/" ? 200 : 404,
+      headers: { "content-type": "text/plain; charset=utf-8" },
+    });
+  },
+};
