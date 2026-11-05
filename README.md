@@ -30,6 +30,10 @@ This is a simulation. It is not for operational use. It does not model weapons r
 
 Roles are exercise clearances, not accounts. Observer is CUI. Analyst is SECRET. Commander is TS.
 
+## Handoff
+
+[handoff/](handoff/README.md) is a record of this backend for another model. It is not the running service. Import `brief`, `WORK`, `API`, and `RULES` from `handoff/odin_work.ts`, `handoff/odin_work.js`, or `handoff/odin_work.py`.
+
 ## Tests
 
 ```bash
