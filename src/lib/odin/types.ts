@@ -70,6 +70,7 @@ export interface CourseView {
   summary: string;
   steps: string[];
   status: "draft" | "approved" | "rejected" | "tasked" | "complete";
+  refusal: string | null;
   classification: ClassName;
 }
 

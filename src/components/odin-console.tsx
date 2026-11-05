@@ -434,6 +434,7 @@ function DecideView({
               <p className="label">{course.status}</p>
               <h2 className="h3 mt-3">{course.title}</h2>
               <p className="body mt-4">{course.summary}</p>
+              {course.refusal ? <p className="body mt-4 text-muted">{course.refusal}</p> : null}
               <ul className="mt-4 flex flex-col gap-2">
                 {course.steps.map((step) => (
                   <li key={step} className="body text-muted">

@@ -219,6 +219,12 @@ export const WORK: readonly WorkItem[] = [
       "White page, Helvetica stack, one column. Three views: Picture, Decide, Record. Role switcher. Field note, course buttons, task buttons, and a FABRIC™ send box. Withheld rows stay visible as withheld.",
   },
   {
+    name: "Reject and redraft",
+    done: true,
+    detail:
+      "A commander rejection is stored on the course and the ledger. The situation opens again, so an analyst can draft another course. The refused course stays on the picture.",
+  },
+  {
     name: "Worker package",
     done: false,
     detail: "wrangler.toml and src/worker.ts are written. Deploy was not run.",

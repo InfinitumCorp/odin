@@ -109,6 +109,35 @@ describe("ODIN° exercise backend", () => {
     assert.equal(next.held, false);
   });
 
+  it("reopens a situation after the commander rejects the course", async () => {
+    const odin = await createOdin();
+    const drafted = await odin.draft("analyst");
+    assert.equal(drafted.ok, true);
+    const course = drafted.picture.courses.find((item) => !isRedacted(item) && item.title.includes("east relay"));
+    if (!course || isRedacted(course)) throw new Error("course missing");
+    const rejected = await odin.decide("commander", course.id, "reject", "Use the north relay instead.");
+    assert.equal(rejected.ok, true);
+    if (!rejected.ok) return;
+    const kept = rejected.picture.courses.find((item) => item.id === course.id);
+    if (!kept || isRedacted(kept)) throw new Error("rejected course missing");
+    assert.equal(kept.status, "rejected");
+    assert.match(kept.refusal ?? "", /north relay/);
+    const open = rejected.picture.alerts.find((item) => item.id === "alt-mesh");
+    if (!open || isRedacted(open)) throw new Error("alert missing");
+    assert.equal(open.needsDecision, true);
+    const again = await odin.draft("analyst");
+    assert.equal(again.ok, true);
+    if (!again.ok) return;
+    const fresh = again.picture.courses.filter(
+      (item) => !isRedacted(item) && item.status === "draft" && item.title.includes("east relay"),
+    );
+    assert.equal(fresh.length, 1);
+    const next = fresh[0];
+    if (!next || isRedacted(next)) throw new Error("second draft missing");
+    assert.notEqual(next.id, course.id);
+    assert.equal((await odin.verify()).ok, true);
+  });
+
   it("files a commander note the observer cannot read", async () => {
     const odin = await createOdin();
     const filed = await odin.observe("commander", "Tunnel mouth is clear.");

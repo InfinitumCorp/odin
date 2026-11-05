@@ -77,6 +77,7 @@ interface Course {
   status: "draft" | "approved" | "rejected" | "tasked" | "complete";
   classification: ClassLevel;
   alertId: string;
+  refusal?: string;
 }
 
 interface Task {
@@ -605,6 +606,7 @@ export class OdinService {
       summary: course.summary,
       steps: course.steps,
       status: course.status,
+      refusal: course.refusal ?? null,
       classification: CLASS_NAME[course.classification],
     }));
     const tasks = this.gate(this.world.tasks, role, (task): TaskView => ({
@@ -838,14 +840,20 @@ export class OdinService {
     }
     const remark = note?.trim();
     if (decision === "reject") {
+      const reason = remark || "The commander rejected the course. No reason was written.";
       course.status = "rejected";
+      course.refusal = reason;
+      const alert = this.world.alerts.find((item) => item.id === course.alertId);
+      if (alert && alert.courseId === course.id) {
+        alert.courseId = undefined;
+      }
       this.queue({
         type: "audit",
         signer: "commander",
         actor: ROLE_ACTOR.commander,
         subject: course.id,
-        summary: `Rejected “${course.title}”.${remark ? ` ${remark}` : ""}`,
-        classification: 2,
+        summary: `Rejected “${course.title}”. The situation is open again. ${reason}`,
+        classification: course.classification,
       });
       await this.flush();
       return { ok: true as const, picture: await this.picture(role, false) };

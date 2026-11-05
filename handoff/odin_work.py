@@ -246,6 +246,15 @@ WORK = [
         ),
     },
     {
+        "name": "Reject and redraft",
+        "done": True,
+        "detail": (
+            "A commander rejection is stored on the course and the ledger. "
+            "The situation opens again, so an analyst can draft another course. "
+            "The refused course stays on the picture."
+        ),
+    },
+    {
         "name": "Worker package",
         "done": False,
         "detail": (
