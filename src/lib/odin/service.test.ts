@@ -170,4 +170,17 @@ describe("ODIN° exercise backend", () => {
     assert.match(scene.answer, /roster/i);
     assert.doesNotMatch(scene.answer, /weapon|strike|engage/i);
   });
+
+  it("does not tell an observer how many secret messages the relay is holding", async () => {
+    const odin = await createOdin({ now: () => new Date("2026-11-05T00:00:00Z") });
+    const sent = await odin.sendTraffic("commander", "Harbor Civil", "QUORUM-77 stays off the open net");
+    assert.equal(sent.ok, true);
+    const observer = await odin.ask("observer", "Is any FABRIC traffic held on the mesh?");
+    assert.match(observer.answer, /degraded/i);
+    assert.doesNotMatch(observer.answer, /1 FABRIC|QUORUM-77/);
+    const commander = await odin.ask("commander", "Is the QUORUM-77 FABRIC traffic held on the mesh?");
+    assert.match(commander.answer, /1 FABRIC/);
+    const picture = await odin.picture("observer");
+    assert.ok(picture.ledger.every((entry) => !String(entry.summary ?? "").includes("QUORUM-77")));
+  });
 });
