@@ -74,7 +74,7 @@ interface Course {
   title: string;
   summary: string;
   steps: string[];
-  status: "draft" | "approved" | "rejected" | "tasked";
+  status: "draft" | "approved" | "rejected" | "tasked" | "complete";
   classification: ClassLevel;
   alertId: string;
 }
@@ -857,18 +857,95 @@ export class OdinService {
       classification: task.classification,
     });
     const siblings = this.world.tasks.filter((item) => item.courseId === task.courseId);
-    if (siblings.length && siblings.every((item) => item.status === "done")) {
-      this.queue({
-        type: "attestation",
-        signer: "system",
-        actor: "/CNDCTR/™",
-        subject: task.courseId,
-        summary: "Every task in the approved course is done.",
-        classification: task.classification,
-      });
+    const course = this.world.courses.find((item) => item.id === task.courseId);
+    if (course && course.status === "tasked" && siblings.length && siblings.every((item) => item.status === "done")) {
+      this.settle(course);
     }
     await this.flush();
     return { ok: true as const, picture: await this.picture(role, false) };
+  }
+
+  private settle(course: Course) {
+    course.status = "complete";
+    const alert = this.world.alerts.find((item) => item.id === course.alertId);
+    if (alert) alert.needsDecision = false;
+    const at = this.now().toISOString();
+
+    if (course.alertId === "alt-liaison") {
+      const harbor = this.world.partners.find((item) => item.id === "harbor");
+      if (harbor) {
+        harbor.status = "Current";
+        harbor.note = "Answered the welfare check. No mission data was sent.";
+      }
+      const spectre = this.world.systems.find((item) => item.id === "spectre");
+      if (spectre) {
+        spectre.state = "nominal";
+        spectre.line = "Harbor Civil answered. The relationship is current.";
+      }
+      if (alert) {
+        alert.title = "Harbor Civil answered";
+        alert.detail = "The welfare check came back. The liaison is on the net, and no mission data was released.";
+      }
+      this.world.traffic.unshift({
+        id: this.nextId("msg"),
+        channel: "FABRIC™",
+        from: "Harbor Civil",
+        to: "Exercise control",
+        body: "On the net. No assistance required. Send no mission data.",
+        at,
+        classification: 2,
+      });
+    }
+
+    if (course.alertId === "alt-depot") {
+      const vehicle = this.world.tracks.find((item) => item.id === "trk-depot");
+      if (vehicle) {
+        vehicle.vx = 0;
+        vehicle.note = "Held under observation. It was not approached, and it is not on the roster.";
+      }
+      const truck = this.world.tracks.find((item) => item.id === "trk-truck");
+      if (truck) {
+        truck.vx = 0;
+        truck.note = "Held clear of the depot road until the commander says otherwise.";
+      }
+      if (alert) {
+        alert.title = "Depot resupply is held";
+        alert.detail = "The vehicle is watched from a standoff. The roster truck is clear of the road.";
+      }
+    }
+
+    if (course.alertId === "alt-gap") {
+      const pollen = this.world.tracks.find((item) => item.id === "trk-pollen");
+      if (pollen) {
+        pollen.vy = 0;
+        pollen.note = "Bravo is covering the ridge. The gap is closed.";
+      }
+      if (alert) {
+        alert.title = "Ridge coverage is restored";
+        alert.detail = "POLLEN™ Bravo is on the ridge. NEMESIS™ remains on standoff.";
+      }
+    }
+
+    if (course.alertId === "alt-flower") {
+      const flower = this.world.systems.find((item) => item.id === "flower");
+      if (flower) {
+        flower.state = "nominal";
+        flower.line = "Bay 3 is offline. Launches use the cool bays.";
+      }
+      if (alert) {
+        alert.title = "Flower™ bay 3 is offline";
+        alert.detail = "The warm bay is resting. The station can still launch.";
+      }
+    }
+
+    this.queue({
+      type: "attestation",
+      signer: "system",
+      actor: "/CNDCTR/™",
+      subject: course.id,
+      summary: `“${course.title}” is complete. The picture was updated.`,
+      classification: course.classification,
+    });
   }
 
   async sendTraffic(role: Role, to: string, body: string) {

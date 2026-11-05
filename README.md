@@ -10,7 +10,7 @@ This is a simulation. It is not for operational use. It does not model weapons r
 
 - Files a field note through [HRVST]™. The note is stored at the filer's clearance.
 - Answers plain questions from that picture.
-- Drafts courses with SCALVS.ai™. Tasks them with /CNDCTR/™ only after commander approval.
+- Drafts courses with SCALVS.ai™. Tasks them with /CNDCTR/™ only after commander approval. Finishing the tasks updates the picture.
 - Records the chain of custody on a private, permissioned, Ed25519-signed hash chain.
 
 ## HTTP

@@ -47,6 +47,33 @@ describe("ODIN° exercise backend", () => {
     assert.ok(observer.courses.some((item) => isRedacted(item)));
   });
 
+  it("updates the picture when an approved course is finished", async () => {
+    const odin = await createOdin();
+    const drafted = await odin.draft("analyst");
+    assert.equal(drafted.ok, true);
+    const course = drafted.picture.courses.find((item) => !isRedacted(item) && item.title.includes("Harbor"));
+    if (!course || isRedacted(course)) throw new Error("course missing");
+    const approved = await odin.decide("commander", course.id, "approve");
+    assert.equal(approved.ok, true);
+    if (!approved.ok) return;
+    let picture = approved.picture;
+    const tasks = picture.tasks.filter((item) => !isRedacted(item) && item.courseId === course.id);
+    assert.ok(tasks.length >= 1);
+    for (const task of tasks) {
+      const step = await odin.advanceTask("analyst", task.id, "done");
+      assert.equal(step.ok, true);
+      if (step.ok) picture = step.picture;
+    }
+    const settled = picture.courses.find((item) => item.id === course.id);
+    if (!settled || isRedacted(settled)) throw new Error("settled course missing");
+    assert.equal(settled.status, "complete");
+    const harbor = picture.partners.find((item) => !isRedacted(item) && item.name === "Harbor Civil");
+    if (!harbor || isRedacted(harbor)) throw new Error("harbor missing");
+    assert.equal(harbor.status, "Current");
+    assert.ok(picture.traffic.some((item) => !isRedacted(item) && item.body.includes("On the net")));
+    assert.equal((await odin.verify()).ok, true);
+  });
+
   it("files a commander note the observer cannot read", async () => {
     const odin = await createOdin();
     const filed = await odin.observe("commander", "Tunnel mouth is clear.");
