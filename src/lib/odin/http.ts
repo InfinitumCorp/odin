@@ -1,5 +1,5 @@
 import { ZodError } from "zod";
-import { askSchema, decideSchema, draftSchema, roleSchema, taskSchema, trafficSchema } from "./schemas.ts";
+import { askSchema, decideSchema, draftSchema, observationSchema, roleSchema, taskSchema, trafficSchema } from "./schemas.ts";
 import { getOdin } from "./store.server.ts";
 
 function json(body: unknown, status = 200) {
@@ -23,7 +23,8 @@ function fail(error: unknown) {
  * POST /api/odin/courses    { role }
  * POST /api/odin/decisions  { role, courseId, decision, note? }
  * POST /api/odin/tasks      { role, taskId, status }
- * POST /api/odin/traffic    { role, to, body }
+ * POST /api/odin/traffic      { role, to, body }
+ * POST /api/odin/observations { role, note }
  */
 export async function handleOdinRequest(request: Request, splat: string): Promise<Response> {
   const path = splat.replace(/^\/+|\/+$/g, "");
@@ -80,6 +81,10 @@ export async function handleOdinRequest(request: Request, splat: string): Promis
       const data = trafficSchema.parse(body);
       const result = await odin.sendTraffic(data.role, data.to, data.body);
       return json(result, result.ok ? 200 : 403);
+    }
+    if (path === "observations") {
+      const data = observationSchema.parse(body);
+      return json(await odin.observe(data.role, data.note));
     }
     return json({ ok: false, error: "Not found." }, 404);
   } catch (error) {

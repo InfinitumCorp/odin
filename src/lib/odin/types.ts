@@ -82,6 +82,14 @@ export interface TaskView {
   classification: ClassName;
 }
 
+export interface ObservationView {
+  id: string;
+  author: string;
+  note: string;
+  at: string;
+  classification: ClassName;
+}
+
 export interface TrafficView {
   id: string;
   channel: string;
@@ -110,6 +118,7 @@ export interface Picture {
   withheld: number;
   alerts: Array<AlertView | Redacted>;
   tracks: Array<TrackView | Redacted>;
+  observations: Array<ObservationView | Redacted>;
   systems: SystemView[];
   partners: Array<PartnerView | Redacted>;
   courses: Array<CourseView | Redacted>;

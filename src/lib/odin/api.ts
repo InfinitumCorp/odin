@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { askSchema, decideSchema, draftSchema, roleSchema, taskSchema, trafficSchema } from "./schemas.ts";
+import { askSchema, decideSchema, draftSchema, observationSchema, roleSchema, taskSchema, trafficSchema } from "./schemas.ts";
 
 export const getPicture = createServerFn({ method: "POST" })
   .validator((input: unknown) => roleSchema.parse(input))
@@ -34,6 +34,13 @@ export const advanceTask = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { getOdin } = await import("./store.server.ts");
     return (await getOdin()).advanceTask(data.role, data.taskId, data.status);
+  });
+
+export const fileObservation = createServerFn({ method: "POST" })
+  .validator((input: unknown) => observationSchema.parse(input))
+  .handler(async ({ data }) => {
+    const { getOdin } = await import("./store.server.ts");
+    return (await getOdin()).observe(data.role, data.note);
   });
 
 export const sendTraffic = createServerFn({ method: "POST" })

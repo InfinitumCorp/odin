@@ -8,7 +8,7 @@ This is a simulation. It is not for operational use. It does not model weapons r
 
 ## What the backend does
 
-- Fuses a moving exercise picture and withholds anything above the caller's exercise clearance.
+- Files a field note through [HRVST]™. The note is stored at the filer's clearance.
 - Answers plain questions from that picture.
 - Drafts courses with SCALVS.ai™. Tasks them with /CNDCTR/™ only after commander approval.
 - Records the chain of custody on a private, permissioned, Ed25519-signed hash chain.
@@ -25,6 +25,7 @@ This is a simulation. It is not for operational use. It does not model weapons r
 | POST | `/api/odin/decisions` | `{ role, courseId, decision, note? }` |
 | POST | `/api/odin/tasks` | `{ role, taskId, status }` |
 | POST | `/api/odin/traffic` | `{ role, to, body }` |
+| POST | `/api/odin/observations` | `{ role, note }` |
 
 Roles are exercise clearances, not accounts. Observer is CUI. Analyst is SECRET. Commander is TS.
 

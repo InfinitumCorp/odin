@@ -25,6 +25,11 @@ export const taskSchema = z.object({
   status: z.enum(["in-progress", "done"]),
 });
 
+export const observationSchema = z.object({
+  role: roleSchema,
+  note: z.string().trim().min(1).max(500),
+});
+
 export const trafficSchema = z.object({
   role: roleSchema,
   to: z.string().trim().min(1).max(80),

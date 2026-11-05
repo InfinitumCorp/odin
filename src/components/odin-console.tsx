@@ -5,6 +5,7 @@ import {
   askScene,
   decideCourse,
   draftCourses,
+  fileObservation,
   getPicture,
   sendTraffic,
 } from "@/lib/odin/api";
@@ -29,6 +30,7 @@ export function OdinConsole() {
   const decide = useServerFn(decideCourse);
   const moveTask = useServerFn(advanceTask);
   const send = useServerFn(sendTraffic);
+  const fileNote = useServerFn(fileObservation);
 
   const [role, setRole] = useState<Role>("observer");
   const [view, setView] = useState<View>("Picture");
@@ -38,6 +40,7 @@ export function OdinConsole() {
   const [note, setNote] = useState("");
   const [to, setTo] = useState("Harbor Civil");
   const [body, setBody] = useState("");
+  const [fieldNote, setFieldNote] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -159,7 +162,21 @@ export function OdinConsole() {
         ))}
       </nav>
 
-      {picture && view === "Picture" ? <PictureView picture={picture} /> : null}
+      {picture && view === "Picture" ? (
+        <PictureView
+          picture={picture}
+          fieldNote={fieldNote}
+          busy={busy}
+          onFieldNote={setFieldNote}
+          onFile={() =>
+            void run(async () => {
+              const result = await fileNote({ data: { role, note: fieldNote.trim() } });
+              setPicture(result.picture);
+              setFieldNote("");
+            })
+          }
+        />
+      ) : null}
       {picture && view === "Decide" ? (
         <DecideView
           picture={picture}
@@ -227,12 +244,67 @@ export function OdinConsole() {
   );
 }
 
-function PictureView({ picture }: { picture: Picture }) {
+function PictureView({
+  picture,
+  fieldNote,
+  busy,
+  onFieldNote,
+  onFile,
+}: {
+  picture: Picture;
+  fieldNote: string;
+  busy: boolean;
+  onFieldNote: (value: string) => void;
+  onFile: () => void;
+}) {
   return (
     <div className="mt-10">
       <p className="body">
         <Rich text={picture.posture} />
       </p>
+      <form
+        className="mt-10 flex flex-col gap-3"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!fieldNote.trim()) return;
+          onFile();
+        }}
+      >
+        <h2 className="h3">Field note</h2>
+        <p className="body text-muted">
+          <Rich text="[HRVST]™ files the note at this role's clearance. A lower role cannot read it. It is not for sale." />
+        </p>
+        <input
+          value={fieldNote}
+          onChange={(event) => onFieldNote(event.target.value)}
+          placeholder="What you saw"
+          maxLength={500}
+          className="body h-12 rounded-xl border border-line bg-paper px-4"
+        />
+        <button
+          type="submit"
+          disabled={busy || !fieldNote.trim()}
+          className="h-12 self-start rounded-xl border border-line px-6 disabled:opacity-40"
+        >
+          File
+        </button>
+      </form>
+      {picture.observations.length ? (
+        <ul className="mt-8 flex flex-col gap-8">
+          {picture.observations.map((item) => (
+            <li key={item.id}>
+              {isRedacted(item) ? (
+                <Withheld classification={item.classification} />
+              ) : (
+                <>
+                  <p className="label">{item.author}</p>
+                  <p className="body mt-2">{item.note}</p>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <h2 className="h3 mt-12">Situations</h2>
       <ul className="mt-6 flex flex-col gap-8">
         {picture.alerts.map((alert) => (

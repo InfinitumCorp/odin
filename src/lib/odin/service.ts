@@ -9,6 +9,7 @@ import {
   type ClassLevel,
   type CourseView,
   type LedgerView,
+  type ObservationView,
   type PartnerView,
   type Picture,
   type Redacted,
@@ -87,6 +88,14 @@ interface Task {
   classification: ClassLevel;
 }
 
+interface Observation {
+  id: string;
+  author: string;
+  note: string;
+  at: string;
+  classification: ClassLevel;
+}
+
 interface Traffic {
   id: string;
   channel: string;
@@ -108,6 +117,7 @@ interface Pending {
 
 interface World {
   tracks: Track[];
+  observations: Observation[];
   alerts: Alert[];
   systems: SystemNode[];
   partners: Partner[];
@@ -192,6 +202,7 @@ function seedWorld(): World {
         classification: 2,
       },
     ],
+    observations: [],
     alerts: [
       {
         id: "alt-mesh",
@@ -532,6 +543,13 @@ export class OdinService {
       confidence: track.confidence.toFixed(2),
       classification: CLASS_NAME[track.classification],
     }));
+    const observations = this.gate(this.world.observations, role, (item): ObservationView => ({
+      id: item.id,
+      author: item.author,
+      note: item.note,
+      at: item.at,
+      classification: CLASS_NAME[item.classification],
+    }));
     const alerts = this.gate(this.world.alerts, role, (alert): AlertView => ({
       id: alert.id,
       title: alert.title,
@@ -604,6 +622,7 @@ export class OdinService {
     });
     const withheld =
       tracks.withheld +
+      observations.withheld +
       alerts.withheld +
       systems.withheld +
       partners.withheld +
@@ -628,6 +647,7 @@ export class OdinService {
       withheld,
       alerts: alerts.rows as Picture["alerts"],
       tracks: tracks.rows as Picture["tracks"],
+      observations: observations.rows as Picture["observations"],
       systems: systems.rows,
       partners: partners.rows as Picture["partners"],
       courses: courses.rows as Picture["courses"],
@@ -873,6 +893,28 @@ export class OdinService {
       subject: message.id,
       summary: `FABRIC™ to ${to}: ${body.slice(0, 180)}`,
       classification: 2,
+    });
+    await this.flush();
+    return { ok: true as const, picture: await this.picture(role, false) };
+  }
+
+  async observe(role: Role, note: string) {
+    await this.catchUp();
+    const item: Observation = {
+      id: this.nextId("obs"),
+      author: ROLE_ACTOR[role],
+      note,
+      at: this.now().toISOString(),
+      classification: ROLE_CLEARANCE[role],
+    };
+    this.world.observations.unshift(item);
+    this.queue({
+      type: "provenance",
+      signer: role,
+      actor: "[HRVST]™",
+      subject: item.id,
+      summary: `Field note from ${item.author}: ${note.slice(0, 180)}`,
+      classification: item.classification,
     });
     await this.flush();
     return { ok: true as const, picture: await this.picture(role, false) };

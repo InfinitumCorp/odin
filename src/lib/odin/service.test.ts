@@ -47,6 +47,19 @@ describe("ODIN° exercise backend", () => {
     assert.ok(observer.courses.some((item) => isRedacted(item)));
   });
 
+  it("files a commander note the observer cannot read", async () => {
+    const odin = await createOdin();
+    const filed = await odin.observe("commander", "Tunnel mouth is clear.");
+    assert.equal(filed.ok, true);
+    const visible = filed.picture.observations.find((item) => !isRedacted(item));
+    if (!visible || isRedacted(visible)) throw new Error("note missing");
+    assert.match(visible.note, /Tunnel mouth/);
+    const observer = await odin.picture("observer");
+    const hidden = observer.observations.find((item) => item.id === visible.id);
+    assert.ok(hidden && isRedacted(hidden));
+    assert.equal((await odin.verify()).ok, true);
+  });
+
   it("answers from the picture and does not invent a weapon", async () => {
     const odin = await createOdin();
     const scene = await odin.ask("commander", "What is happening with the depot vehicle?");
