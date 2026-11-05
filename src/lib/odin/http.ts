@@ -1,5 +1,6 @@
 import { ZodError } from "zod";
 import { askSchema, decideSchema, draftSchema, observationSchema, roleSchema, taskSchema, trafficSchema } from "./schemas.ts";
+import { projectFeeds } from "./feeds.ts";
 import { getOdin } from "./store.server.ts";
 
 function json(body: unknown, status = 200) {
@@ -44,6 +45,10 @@ export async function handleOdinRequest(request: Request, splat: string): Promis
     if (request.method === "GET" && path === "picture") {
       const role = roleSchema.parse(url.searchParams.get("role"));
       return json(await odin.picture(role));
+    }
+    if (request.method === "GET" && path === "feeds") {
+      const role = roleSchema.parse(url.searchParams.get("role"));
+      return json(projectFeeds(await odin.picture(role)));
     }
     if (request.method === "GET" && path === "ledger") {
       const role = roleSchema.parse(url.searchParams.get("role"));

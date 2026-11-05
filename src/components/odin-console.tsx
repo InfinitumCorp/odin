@@ -10,6 +10,7 @@ import {
   sendTraffic,
 } from "@/lib/odin/api";
 import { isRedacted, type Picture, type Role } from "@/lib/odin/types";
+import { projectFeeds } from "@/lib/odin/feeds";
 import { Rich } from "@/components/rich";
 
 const ROLES: { id: Role; label: string }[] = [
@@ -18,7 +19,7 @@ const ROLES: { id: Role; label: string }[] = [
   { id: "commander", label: "Commander" },
 ];
 
-const VIEWS = ["Picture", "Decide", "Record"] as const;
+const VIEWS = ["Picture", "Decide", "Record", "Feeds"] as const;
 type View = (typeof VIEWS)[number];
 
 const LAYERS = ["Observe", "Orient", "Decide", "Act", "Foundation"];
@@ -240,6 +241,7 @@ export function OdinConsole() {
           }
         />
       ) : null}
+      {picture && view === "Feeds" ? <FeedsView picture={picture} /> : null}
     </main>
   );
 }
@@ -614,6 +616,82 @@ function RecordView({
           </li>
         ))}
       </ol>
+    </div>
+  );
+}
+
+function FeedsView({ picture }: { picture: Picture }) {
+  const feeds = projectFeeds(picture);
+  return (
+    <div className="mt-10">
+      <p className="body">{feeds.note}</p>
+      <ul className="mt-8 flex flex-col gap-6">
+        {feeds.sources.map((source) => (
+          <li key={source.id}>
+            <p className="body">{source.name}</p>
+            <p className="body mt-2 text-muted">
+              {source.repo}. {source.shape}
+            </p>
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="h3 mt-12">Objects</h2>
+      <ul className="mt-6 flex flex-col gap-8">
+        {feeds.objects.map((object) => (
+          <li key={isRedacted(object) ? object.id : object.primaryKey}>
+            {isRedacted(object) ? (
+              <Withheld classification={object.classification} />
+            ) : (
+              <>
+                <p className="body">
+                  <Rich text={object.title} />
+                  <span className="text-muted"> · {object.properties.grid}</span>
+                </p>
+                <p className="body mt-2 text-muted">
+                  <Rich text={`${object.properties.source}. ${object.properties.note}`} />
+                </p>
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="h3 mt-12">Entities</h2>
+      <ul className="mt-6 flex flex-col gap-8">
+        {feeds.entities.map((entity) => (
+          <li key={isRedacted(entity) ? entity.id : entity.entityId}>
+            {isRedacted(entity) ? (
+              <Withheld classification={entity.classification} />
+            ) : (
+              <>
+                <p className="body">
+                  <Rich text={entity.aliases[0]?.name ?? entity.entityId} />
+                  <span className="text-muted"> · grid {entity.location.grid}</span>
+                </p>
+                <p className="body mt-2 text-muted">
+                  <Rich text={`${entity.provenance.source}. ${entity.description}`} />
+                </p>
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="h3 mt-12">Launches</h2>
+      <ul className="mt-6 flex flex-col gap-8">
+        {feeds.launches.map((launch) => (
+          <li key={launch.id}>
+            <p className="body">
+              <Rich text={launch.name} />
+              <span className="text-muted"> · {launch.upcoming ? "upcoming" : "held"}</span>
+            </p>
+            <p className="body mt-2 text-muted">
+              <Rich text={`${launch.rocket} from ${launch.launchpad}. ${launch.details}`} />
+            </p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

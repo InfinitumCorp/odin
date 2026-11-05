@@ -255,6 +255,15 @@ WORK = [
         ),
     },
     {
+        "name": "Public feed shapes",
+        "done": True,
+        "detail": (
+            "The picture is also readable as an ontology object, a Lattice entity, "
+            "and a launch record. No live connection. No weapons release. "
+            "SpaceX's own GitHub org has no launch SDK; the launch fields follow the public v4 record."
+        ),
+    },
+    {
         "name": "Worker package",
         "done": False,
         "detail": (

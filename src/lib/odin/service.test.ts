@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { createOdin } from "./service.ts";
+import { projectFeeds } from "./feeds.ts";
 import { isRedacted } from "./types.ts";
 
 describe("ODIN° exercise backend", () => {
@@ -136,6 +137,18 @@ describe("ODIN° exercise backend", () => {
     if (!next || isRedacted(next)) throw new Error("second draft missing");
     assert.notEqual(next.id, course.id);
     assert.equal((await odin.verify()).ok, true);
+  });
+
+  it("projects the picture into the three public shapes", async () => {
+    const odin = await createOdin();
+    const feeds = projectFeeds(await odin.picture("observer"));
+    assert.equal(feeds.sources.length, 3);
+    const depot = feeds.entities.find((item) => ("entityId" in item ? item.entityId : item.id) === "trk-depot");
+    assert.ok(depot && isRedacted(depot));
+    const launch = feeds.launches[0];
+    assert.equal(launch?.rocket, "POLLEN™");
+    assert.match(launch?.details ?? "", /not a SpaceX/i);
+    assert.equal(launch?.success, null);
   });
 
   it("files a commander note the observer cannot read", async () => {

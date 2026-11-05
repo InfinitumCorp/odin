@@ -13,6 +13,7 @@ This is a simulation. It is not for operational use. It does not model weapons r
 - Drafts courses with SCALVS.ai™. Tasks them with /CNDCTR/™ only after commander approval. A rejection reopens the situation. Finishing the tasks updates the picture.
 - Records the chain of custody on a private, permissioned, Ed25519-signed hash chain.
 - Holds FABRIC™ messages while the east relay is degraded, and releases them when that course is finished.
+- Projects the picture into three public shapes: an ontology object, a Lattice entity, and a launch record. There is no live connection to those companies.
 
 ## HTTP
 
@@ -20,7 +21,7 @@ This is a simulation. It is not for operational use. It does not model weapons r
 |---|---|---|
 | GET | `/api/odin/health` | — |
 | GET | `/api/odin/picture` | `?role=observer\|analyst\|commander` |
-| GET | `/api/odin/ledger` | `?role=` |
+| GET | `/api/odin/feeds` | `?role=` |
 | POST | `/api/odin/ask` | `{ role, question }` |
 | POST | `/api/odin/courses` | `{ role }` |
 | POST | `/api/odin/decisions` | `{ role, courseId, decision, note? }` |

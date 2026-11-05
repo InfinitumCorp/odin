@@ -187,6 +187,11 @@ export const WORK = [
         detail: "A commander rejection is stored on the course and the ledger. The situation opens again, so an analyst can draft another course. The refused course stays on the picture.",
     },
     {
+        name: "Public feed shapes",
+        done: true,
+        detail: "The picture is also readable as an ontology object, a Lattice entity, and a launch record. No live connection. No weapons release. SpaceX's own GitHub org has no launch SDK; the launch fields follow the public v4 record.",
+    },
+    {
         name: "Worker package",
         done: false,
         detail: "wrangler.toml and src/worker.ts are written. Deploy was not run.",
