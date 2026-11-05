@@ -97,6 +97,7 @@ export interface TrafficView {
   to: string;
   body: string;
   at: string;
+  held: boolean;
   classification: ClassName;
 }
 

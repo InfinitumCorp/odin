@@ -74,6 +74,41 @@ describe("ODIN° exercise backend", () => {
     assert.equal((await odin.verify()).ok, true);
   });
 
+  it("holds a message until the east relay is restored", async () => {
+    const odin = await createOdin();
+    const sent = await odin.sendTraffic("analyst", "LANTERN-3", "Status check only.");
+    assert.equal(sent.ok, true);
+    if (!sent.ok) return;
+    const held = sent.picture.traffic.find((item) => !isRedacted(item) && item.body.includes("Status check"));
+    if (!held || isRedacted(held)) throw new Error("message missing");
+    assert.equal(held.held, true);
+
+    const drafted = await odin.draft("analyst");
+    assert.equal(drafted.ok, true);
+    const course = drafted.picture.courses.find((item) => !isRedacted(item) && item.title.includes("east relay"));
+    if (!course || isRedacted(course)) throw new Error("relay course missing");
+    const approved = await odin.decide("commander", course.id, "approve");
+    assert.equal(approved.ok, true);
+    if (!approved.ok) return;
+    let picture = approved.picture;
+    const tasks = picture.tasks.filter((item) => !isRedacted(item) && item.courseId === course.id);
+    for (const task of tasks) {
+      const step = await odin.advanceTask("analyst", task.id, "done");
+      assert.equal(step.ok, true);
+      if (step.ok) picture = step.picture;
+    }
+    const released = picture.traffic.find((item) => item.id === held.id);
+    if (!released || isRedacted(released)) throw new Error("released message missing");
+    assert.equal(released.held, false);
+    assert.equal(picture.systems.find((item) => item.id === "aether")?.state, "nominal");
+    const again = await odin.sendTraffic("analyst", "LANTERN-3", "Second check.");
+    assert.equal(again.ok, true);
+    if (!again.ok) return;
+    const next = again.picture.traffic.find((item) => !isRedacted(item) && item.body === "Second check.");
+    if (!next || isRedacted(next)) throw new Error("second message missing");
+    assert.equal(next.held, false);
+  });
+
   it("files a commander note the observer cannot read", async () => {
     const odin = await createOdin();
     const filed = await odin.observe("commander", "Tunnel mouth is clear.");

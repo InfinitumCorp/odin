@@ -103,6 +103,7 @@ interface Traffic {
   to: string;
   body: string;
   at: string;
+  held: boolean;
   classification: ClassLevel;
 }
 
@@ -207,8 +208,8 @@ function seedWorld(): World {
       {
         id: "alt-mesh",
         title: "East relay is losing packets",
-        detail: "ÆTHER™ MIL is still carrying traffic. The east relay is degraded, not down.",
-        needsDecision: false,
+        detail: "ÆTHER™ MIL is up, but the east relay is holding new FABRIC™ messages until it is restored.",
+        needsDecision: true,
         classification: 1,
       },
       {
@@ -265,6 +266,7 @@ function seedWorld(): World {
         to: "All stations",
         body: "NORTHLANTERN is live. This is a simulation. Weapons release is not part of it.",
         at: "",
+        held: false,
         classification: 1,
       },
     ],
@@ -276,6 +278,20 @@ function seedWorld(): World {
 }
 
 function courseFor(alert: Alert, id: string): Course | null {
+  if (alert.id === "alt-mesh") {
+    return {
+      id,
+      alertId: alert.id,
+      title: "Restore the east relay",
+      summary: "Shift traffic onto the west relays. Messages the east relay is holding go out when the mesh is whole.",
+      steps: [
+        "ÆTHER™ MIL shifts traffic onto the west relays.",
+        "FABRIC™ releases the messages the east relay was holding.",
+      ],
+      status: "draft",
+      classification: 1,
+    };
+  }
   if (alert.id === "alt-liaison") {
     return {
       id,
@@ -424,6 +440,10 @@ export class OdinService {
   private nextId(prefix: string) {
     this.world.seq += 1;
     return `${prefix}-${this.world.seq}`;
+  }
+
+  private meshDegraded() {
+    return this.world.systems.find((item) => item.id === "aether")?.state === "degraded";
   }
 
   private step(dt: number) {
@@ -602,6 +622,7 @@ export class OdinService {
       to: message.to,
       body: message.body,
       at: message.at,
+      held: message.held,
       classification: CLASS_NAME[message.classification],
     }));
 
@@ -705,9 +726,24 @@ export class OdinService {
     }
     if (/(harbor|liaison|partner|overdue)/.test(q)) {
       if (!hidden(2, "The Harbor Civil relationship")) {
-        lines.push("+SPCTR™ shows Harbor Civil overdue. A check-in goes by FABRIC™, with no mission data attached.");
+        const harbor = this.world.partners.find((item) => item.id === "harbor");
+        lines.push(
+          harbor?.status === "Current"
+            ? "Harbor Civil answered the welfare check. No mission data was sent."
+            : "+SPCTR™ shows Harbor Civil overdue. A check-in goes by FABRIC™, with no mission data attached.",
+        );
         cites.push("harbor");
       }
+    }
+    if (/(mesh|relay|fabric|message|traffic)/.test(q)) {
+      const relay = this.world.systems.find((item) => item.id === "aether");
+      const held = this.world.traffic.filter((item) => item.held).length;
+      lines.push(
+        relay?.state === "degraded"
+          ? `The east relay is degraded. ${held === 0 ? "New FABRIC™ messages will be held." : `${held} FABRIC™ ${held === 1 ? "message is" : "messages are"} held until the relay is restored.`}`
+          : "ÆTHER™ MIL is whole. FABRIC™ messages are going through.",
+      );
+      cites.push("aether");
     }
     if (/(who|identity|callsign|lantern)/.test(q)) {
       if (!hidden(3, "The roster identity")) {
@@ -893,8 +929,30 @@ export class OdinService {
         to: "Exercise control",
         body: "On the net. No assistance required. Send no mission data.",
         at,
+        held: false,
         classification: 2,
       });
+    }
+
+    if (course.alertId === "alt-mesh") {
+      const relay = this.world.systems.find((item) => item.id === "aether");
+      if (relay) {
+        relay.state = "nominal";
+        relay.line = "Mesh is whole. Messages the east relay held have gone through.";
+      }
+      let released = 0;
+      for (const message of this.world.traffic) {
+        if (!message.held) continue;
+        message.held = false;
+        released += 1;
+      }
+      if (alert) {
+        alert.title = "East relay is restored";
+        alert.detail =
+          released > 0
+            ? `${released} held ${released === 1 ? "message has" : "messages have"} gone through. The mesh is whole.`
+            : "Traffic is on the west relays. The mesh is whole.";
+      }
     }
 
     if (course.alertId === "alt-depot") {
@@ -960,6 +1018,7 @@ export class OdinService {
       to,
       body,
       at: this.now().toISOString(),
+      held: this.meshDegraded(),
       classification: 2,
     };
     this.world.traffic.unshift(message);
@@ -968,7 +1027,9 @@ export class OdinService {
       signer: role,
       actor: ROLE_ACTOR[role],
       subject: message.id,
-      summary: `FABRIC™ to ${to}: ${body.slice(0, 180)}`,
+      summary: message.held
+        ? `FABRIC™ to ${to} is held by the east relay.`
+        : `FABRIC™ to ${to}: ${body.slice(0, 180)}`,
       classification: 2,
     });
     await this.flush();

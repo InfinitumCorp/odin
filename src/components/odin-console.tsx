@@ -591,6 +591,7 @@ function RecordView({
               <>
                 <p className="label">
                   <Rich text={`${message.channel} · ${message.from} to ${message.to}`} />
+                  {message.held ? " · held" : ""}
                 </p>
                 <p className="body mt-2">{message.body}</p>
               </>
