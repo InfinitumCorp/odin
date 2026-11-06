@@ -1,4 +1,4 @@
-import { handleCndctrRequest } from "./lib/odin/cndctr.ts";
+import { handleArchitctRequest } from "./lib/odin/architct.ts";
 import { handleOdinRequest } from "./lib/odin/http.ts";
 
 /**
@@ -13,10 +13,10 @@ export default {
       const splat = url.pathname.slice(prefix.length).replace(/^\//, "");
       return handleOdinRequest(request, splat);
     }
-    const actions = "/cndctr/v1/actions";
+    const actions = "/architct/v1/actions";
     if (url.pathname === actions || url.pathname.startsWith(`${actions}/`)) {
       const action = url.pathname.slice(actions.length).replace(/^\//, "");
-      return handleCndctrRequest(request, action);
+      return handleArchitctRequest(request, action);
     }
     if (url.pathname === "/health") {
       return handleOdinRequest(request, "health");

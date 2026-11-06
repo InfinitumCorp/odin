@@ -414,7 +414,7 @@ function DecideView({
   return (
     <div className="mt-10">
       <p className="body text-muted">
-        SCALVS.ai™ drafts. /CNDCTR/™ tasks only after the commander approves. Nothing here is a use of force.
+        SCALVS.ai™ drafts. :\ARCHITCT\™ tasks only after the commander approves. Nothing here is a use of force.
       </p>
       <button
         type="button"
@@ -439,7 +439,7 @@ function DecideView({
               {course.refusal ? <p className="body mt-4 text-muted">{course.refusal}</p> : null}
               {course.score ? (
                 <p className="body mt-4 text-muted">
-                  /CNDCTR/™ composed a rehearsal score. It is not running.
+                  :\ARCHITCT\™ composed a rehearsal score. It is not running.
                 </p>
               ) : null}
               <ul className="mt-4 flex flex-col gap-2">

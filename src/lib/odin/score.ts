@@ -6,7 +6,7 @@ export interface RehearsalScore {
   successCriteria: string[];
 }
 
-/** A Score in the /CNDCTR/™ sense. Rehearsal only: drafted, not run. */
+/** A Score in the :\ARCHITCT\™ sense. Rehearsal only: drafted, not run. */
 export function composeScore(course: { id: string; title: string }): RehearsalScore {
   return {
     id: `score-${course.id}`,
@@ -16,7 +16,7 @@ export function composeScore(course: { id: string; title: string }): RehearsalSc
     successCriteria: [
       "The tasks on this course are done.",
       "The picture shows the change the course described.",
-      "No message was sent and no course was approved by Conductor.",
+      "No message was sent and no course was approved by Architect.",
     ],
   };
 }

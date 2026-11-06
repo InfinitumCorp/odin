@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { createOdin } from "./service.ts";
 import { projectFeeds } from "./feeds.ts";
-import { CNDCTR_ACTIONS, handleCndctrRequest } from "./cndctr.ts";
+import { ARCHITCT_ACTIONS, handleArchitctRequest } from "./architct.ts";
 import { isRedacted } from "./types.ts";
 
 describe("ODIN° exercise backend", () => {
@@ -152,7 +152,7 @@ describe("ODIN° exercise backend", () => {
     assert.equal(launch?.success, null);
   });
 
-  it("composes a rehearsal score and does not let Conductor approve", async () => {
+  it("composes a rehearsal score and does not let Architect approve", async () => {
     const odin = await createOdin();
     const drafted = await odin.draft("analyst");
     assert.equal(drafted.ok, true);
@@ -166,9 +166,9 @@ describe("ODIN° exercise backend", () => {
     if (!tasked || isRedacted(tasked)) throw new Error("tasked course missing");
     assert.equal(tasked.score?.autonomy, "rehearsal");
     assert.equal(tasked.score?.permissions[0], "ecosystem");
-    const names = CNDCTR_ACTIONS.map((item) => item.name);
+    const names = ARCHITCT_ACTIONS.map((item) => item.name);
     assert.equal(names.includes("decide"), false);
-    const missing = await handleCndctrRequest(new Request("http://local/cndctr/v1/actions/decide", { method: "POST", body: "{}" }), "decide");
+    const missing = await handleArchitctRequest(new Request("http://local/architct/v1/actions/decide", { method: "POST", body: "{}" }), "decide");
     assert.equal(missing.status, 404);
   });
 

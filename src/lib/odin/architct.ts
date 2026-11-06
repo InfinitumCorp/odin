@@ -2,20 +2,20 @@ import { timingSafeEqual } from "node:crypto";
 import { getOdin } from "./store.server.ts";
 
 /**
- * The /CNDCTR/™ action contract, from InfinitumCorp/cndctr.
+ * The :\ARCHITCT\™ action contract, from InfinitumCorp/architct.
  * ODIN° can be played. It cannot approve a course, send a message, or release anything.
  *
- *   GET  /cndctr/v1/actions
- *   POST /cndctr/v1/actions/{name}   { runId, payload }
+ *   GET  /architct/v1/actions
+ *   POST /architct/v1/actions/{name}   { runId, payload }
  */
 
-export interface CndctrAction {
+export interface ArchitctAction {
   name: string;
   description: string;
   risk: "read" | "write";
 }
 
-export const CNDCTR_ACTIONS: CndctrAction[] = [
+export const ARCHITCT_ACTIONS: ArchitctAction[] = [
   { name: "read_picture", description: "Read the exercise picture for a role.", risk: "read" },
   { name: "ask_picture", description: "Ask the exercise picture a question.", risk: "read" },
   { name: "list_courses", description: "List the courses visible to a role.", risk: "read" },
@@ -31,24 +31,24 @@ function roleOf(payload: Record<string, unknown>) {
 }
 
 function authorized(request: Request) {
-  const token = process.env.CNDCTR_PRODUCT_TOKEN;
+  const token = process.env.ARCHITCT_PRODUCT_TOKEN;
   if (!token) return true;
   const got = Buffer.from(request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "");
   const want = Buffer.from(token);
   return got.length === want.length && timingSafeEqual(got, want);
 }
 
-export async function handleCndctrRequest(request: Request, action: string): Promise<Response> {
+export async function handleArchitctRequest(request: Request, action: string): Promise<Response> {
   if (!authorized(request)) {
     return Response.json({ error: "invalid token" }, { status: 401 });
   }
   if (request.method === "GET" && !action) {
-    return Response.json(CNDCTR_ACTIONS);
+    return Response.json(ARCHITCT_ACTIONS);
   }
   if (request.method !== "POST" || !action) {
     return Response.json({ error: "method not allowed" }, { status: 405 });
   }
-  const known = CNDCTR_ACTIONS.find((item) => item.name === action);
+  const known = ARCHITCT_ACTIONS.find((item) => item.name === action);
   if (!known) {
     return Response.json({ error: `no action "${action}"` }, { status: 404 });
   }
