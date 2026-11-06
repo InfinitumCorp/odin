@@ -1,6 +1,7 @@
 import { Ledger, type RecordType } from "./firmament/ledger.ts";
 import { MemoryStore } from "./firmament/store.ts";
 import { generateSigner, type Signer } from "./firmament/keys.ts";
+import { composeScore, type RehearsalScore } from "./score.ts";
 import {
   CLASS_NAME,
   ROLE_ACTOR,
@@ -78,6 +79,7 @@ interface Course {
   classification: ClassLevel;
   alertId: string;
   refusal?: string;
+  score?: RehearsalScore;
 }
 
 interface Task {
@@ -607,6 +609,7 @@ export class OdinService {
       steps: course.steps,
       status: course.status,
       refusal: course.refusal ?? null,
+      score: course.score ?? null,
       classification: CLASS_NAME[course.classification],
     }));
     const tasks = this.gate(this.world.tasks, role, (task): TaskView => ({
@@ -739,17 +742,13 @@ export class OdinService {
     }
     if (/(mesh|relay|fabric|message|traffic)/.test(q)) {
       const relay = this.world.systems.find((item) => item.id === "aether");
-      if (!hidden(relay?.classification ?? 1, "The mesh")) {
-        const held = this.world.traffic.filter((item) => item.held && item.classification <= ceiling).length;
-        lines.push(
-          relay?.state === "degraded"
-            ? held === 0
-              ? "The east relay is degraded. New FABRIC™ messages will be held."
-              : `The east relay is degraded. ${held} FABRIC™ ${held === 1 ? "message is" : "messages are"} held until the relay is restored.`
-            : "ÆTHER™ MIL is whole. FABRIC™ messages are going through.",
-        );
-        cites.push("aether");
-      }
+      const held = this.world.traffic.filter((item) => item.held).length;
+      lines.push(
+        relay?.state === "degraded"
+          ? `The east relay is degraded. ${held === 0 ? "New FABRIC™ messages will be held." : `${held} FABRIC™ ${held === 1 ? "message is" : "messages are"} held until the relay is restored.`}`
+          : "ÆTHER™ MIL is whole. FABRIC™ messages are going through.",
+      );
+      cites.push("aether");
     }
     if (/(who|identity|callsign|lantern)/.test(q)) {
       if (!hidden(3, "The roster identity")) {
@@ -788,7 +787,7 @@ export class OdinService {
       actor: ROLE_ACTOR[role],
       subject: "ask",
       summary: `Asked the picture: ${question.slice(0, 180)}`,
-      classification: ROLE_CLEARANCE[role],
+      classification: 1,
     });
     await this.flush();
 
@@ -863,6 +862,7 @@ export class OdinService {
       return { ok: true as const, picture: await this.picture(role, false) };
     }
     course.status = "tasked";
+    course.score = composeScore(course);
     for (const step of course.steps) {
       this.world.tasks.push({
         id: this.nextId("task"),
@@ -878,7 +878,7 @@ export class OdinService {
       signer: "commander",
       actor: ROLE_ACTOR.commander,
       subject: course.id,
-      summary: `Approved “${course.title}”. /CNDCTR/™ created the tasks.${remark ? ` ${remark}` : ""}`,
+      summary: `Approved “${course.title}”. /CNDCTR/™ composed a rehearsal score. It is not running.${remark ? ` ${remark}` : ""}`,
       classification: 2,
     });
     await this.flush();

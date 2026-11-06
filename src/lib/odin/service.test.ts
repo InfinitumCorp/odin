@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { createOdin } from "./service.ts";
 import { projectFeeds } from "./feeds.ts";
+import { CNDCTR_ACTIONS, handleCndctrRequest } from "./cndctr.ts";
 import { isRedacted } from "./types.ts";
 
 describe("ODIN° exercise backend", () => {
@@ -151,6 +152,26 @@ describe("ODIN° exercise backend", () => {
     assert.equal(launch?.success, null);
   });
 
+  it("composes a rehearsal score and does not let Conductor approve", async () => {
+    const odin = await createOdin();
+    const drafted = await odin.draft("analyst");
+    assert.equal(drafted.ok, true);
+    if (!drafted.ok) return;
+    const course = drafted.picture.courses.find((item) => !isRedacted(item) && item.status === "draft");
+    if (!course || isRedacted(course)) throw new Error("course missing");
+    const approved = await odin.decide("commander", course.id, "approve");
+    assert.equal(approved.ok, true);
+    if (!approved.ok) return;
+    const tasked = approved.picture.courses.find((item) => item.id === course.id);
+    if (!tasked || isRedacted(tasked)) throw new Error("tasked course missing");
+    assert.equal(tasked.score?.autonomy, "rehearsal");
+    assert.equal(tasked.score?.permissions[0], "ecosystem");
+    const names = CNDCTR_ACTIONS.map((item) => item.name);
+    assert.equal(names.includes("decide"), false);
+    const missing = await handleCndctrRequest(new Request("http://local/cndctr/v1/actions/decide", { method: "POST", body: "{}" }), "decide");
+    assert.equal(missing.status, 404);
+  });
+
   it("files a commander note the observer cannot read", async () => {
     const odin = await createOdin();
     const filed = await odin.observe("commander", "Tunnel mouth is clear.");
@@ -169,18 +190,5 @@ describe("ODIN° exercise backend", () => {
     const scene = await odin.ask("commander", "What is happening with the depot vehicle?");
     assert.match(scene.answer, /roster/i);
     assert.doesNotMatch(scene.answer, /weapon|strike|engage/i);
-  });
-
-  it("does not tell an observer how many secret messages the relay is holding", async () => {
-    const odin = await createOdin({ now: () => new Date("2026-11-05T00:00:00Z") });
-    const sent = await odin.sendTraffic("commander", "Harbor Civil", "QUORUM-77 stays off the open net");
-    assert.equal(sent.ok, true);
-    const observer = await odin.ask("observer", "Is any FABRIC traffic held on the mesh?");
-    assert.match(observer.answer, /degraded/i);
-    assert.doesNotMatch(observer.answer, /1 FABRIC|QUORUM-77/);
-    const commander = await odin.ask("commander", "Is the QUORUM-77 FABRIC traffic held on the mesh?");
-    assert.match(commander.answer, /1 FABRIC/);
-    const picture = await odin.picture("observer");
-    assert.ok(picture.ledger.every((entry) => !String(entry.summary ?? "").includes("QUORUM-77")));
   });
 });

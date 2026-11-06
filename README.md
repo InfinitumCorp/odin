@@ -14,6 +14,7 @@ This is a simulation. It is not for operational use. It does not model weapons r
 - Records the chain of custody on a private, permissioned, Ed25519-signed hash chain.
 - Holds FABRIC™ messages while the east relay is degraded, and releases them when that course is finished.
 - Projects the picture into three public shapes: an ontology object, a Lattice entity, and a launch record. There is no live connection to those companies.
+- Speaks the /CNDCTR/™ action contract from InfinitumCorp/cndctr. An approval composes a rehearsal score. Conductor cannot approve, send, or task itself.
 
 ## HTTP
 
@@ -22,6 +23,8 @@ This is a simulation. It is not for operational use. It does not model weapons r
 | GET | `/api/odin/health` | — |
 | GET | `/api/odin/picture` | `?role=observer\|analyst\|commander` |
 | GET | `/api/odin/feeds` | `?role=` |
+| GET | `/cndctr/v1/actions` | Conductor action list |
+| POST | `/cndctr/v1/actions/{name}` | `{ runId, payload }` |
 | POST | `/api/odin/ask` | `{ role, question }` |
 | POST | `/api/odin/courses` | `{ role }` |
 | POST | `/api/odin/decisions` | `{ role, courseId, decision, note? }` |

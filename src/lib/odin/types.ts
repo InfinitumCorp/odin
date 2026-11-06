@@ -71,6 +71,13 @@ export interface CourseView {
   steps: string[];
   status: "draft" | "approved" | "rejected" | "tasked" | "complete";
   refusal: string | null;
+  score: {
+    id: string;
+    goal: string;
+    autonomy: "rehearsal";
+    permissions: ["ecosystem"];
+    successCriteria: string[];
+  } | null;
   classification: ClassName;
 }
 
