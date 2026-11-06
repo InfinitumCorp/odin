@@ -12,7 +12,7 @@ not model weapons, targeting, or real locations.
 from __future__ import annotations
 
 REPO = "https://github.com/InfinitumCorp/odin"
-HEAD = "62031df"
+HEAD = "eb7f110"
 EXERCISE = "NORTHLANTERN"
 PRODUCT = "ODIN°™"
 
@@ -37,6 +37,7 @@ RULES = {
     "mission_data_stays_off_the_public_nexus": True,
     "omitted": ["#THRONE"],
     "approval": "An analyst may draft. Only the commander may approve or reject.",
+    "eon_feed": "ODIN° reads E(O)N™ MIL emitter fixes only. It never writes back. Wearer positions, health, EMCON and engagements do not leave E(O)N™.",
     "host_named_in_BUILD_RULES": "Cloudflare Workers, project name odin",
     "host_actually_deployed": (
         "Not deployed. wrangler.toml and src/worker.ts are in the repo. "
@@ -61,6 +62,10 @@ COMMITS = [
         "sha": "62031df",
         "did": "FABRIC™ holds messages while the east relay is degraded.",
     },
+    {
+        "sha": "eb7f110",
+        "did": "E(O)N™ MIL emitter fixes join the picture as CUI, read only.",
+    },
 ]
 
 FILES = {
@@ -70,6 +75,8 @@ FILES = {
     "src/lib/odin/http.ts": "HTTP adapter. Used by the TanStack route and the Worker.",
     "src/lib/odin/api.ts": "TanStack server functions. The console calls these.",
     "src/lib/odin/store.server.ts": "One process-local service. It is not durable.",
+    "src/lib/odin/eon.ts": "Read-only E(O)N™ MIL feed pull. Timeout, cache, Access headers, CUI merge.",
+    "src/lib/odin/eon.test.ts": "Fake E(O)N™ feed: connected, no token, down, timeout, Access refusal, bad JSON.",
     "src/lib/odin/service.test.ts": "Node test runner. Six tests, no network.",
     "src/lib/odin/firmament/ledger.ts": "Private hash chain. Ed25519. Not the public nexus.",
     "src/lib/odin/firmament/keys.ts": "Key generation and signature check.",
@@ -264,6 +271,13 @@ WORK = [
         ),
     },
     {
+        "name": "E(O)N™ MIL emitter feed",
+        "done": True,
+        "detail": (
+            "ODIN° reads GET https://eon.infinitumcorp.workers.dev/api/eon/feed/odin with a Cloudflare Access service token (EON_ACCESS_CLIENT_ID, EON_ACCESS_CLIENT_SECRET). It merges the eon- tracks into the picture as CUI, keeps the grid as given, and labels it with E(O)N™'s QUIETFIELD frame; there is no mapping to the ODIN° range grid. Every picture carries eon: state, tick, frame. A 4 second timeout, a 10 second cache. Feed down, bad JSON, or no token leaves the picture working and says the feed is not connected. ODIN° never writes back."
+        ),
+    },
+    {
         "name": "Worker package",
         "done": False,
         "detail": (
@@ -274,6 +288,11 @@ WORK = [
         "name": "Durable ledger",
         "done": False,
         "detail": "Memory only. A restart opens a new exercise.",
+    },
+    {
+        "name": "E(O)N™ Access token",
+        "done": False,
+        "detail": "No Access service token was created and no Worker secret was set. Until then the picture says the E(O)N™ feed is not connected.",
     },
 ]
 
