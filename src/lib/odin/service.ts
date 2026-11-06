@@ -742,13 +742,17 @@ export class OdinService {
     }
     if (/(mesh|relay|fabric|message|traffic)/.test(q)) {
       const relay = this.world.systems.find((item) => item.id === "aether");
-      const held = this.world.traffic.filter((item) => item.held).length;
-      lines.push(
-        relay?.state === "degraded"
-          ? `The east relay is degraded. ${held === 0 ? "New FABRIC™ messages will be held." : `${held} FABRIC™ ${held === 1 ? "message is" : "messages are"} held until the relay is restored.`}`
-          : "ÆTHER™ MIL is whole. FABRIC™ messages are going through.",
-      );
-      cites.push("aether");
+      if (!hidden(relay?.classification ?? 1, "The mesh")) {
+        const held = this.world.traffic.filter((item) => item.held && item.classification <= ceiling).length;
+        lines.push(
+          relay?.state === "degraded"
+            ? held === 0
+              ? "The east relay is degraded. New FABRIC™ messages will be held."
+              : `The east relay is degraded. ${held} FABRIC™ ${held === 1 ? "message is" : "messages are"} held until the relay is restored.`
+            : "ÆTHER™ MIL is whole. FABRIC™ messages are going through.",
+        );
+        cites.push("aether");
+      }
     }
     if (/(who|identity|callsign|lantern)/.test(q)) {
       if (!hidden(3, "The roster identity")) {
@@ -787,7 +791,7 @@ export class OdinService {
       actor: ROLE_ACTOR[role],
       subject: "ask",
       summary: `Asked the picture: ${question.slice(0, 180)}`,
-      classification: 1,
+      classification: ROLE_CLEARANCE[role],
     });
     await this.flush();
 
