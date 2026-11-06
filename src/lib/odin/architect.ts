@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { getOdin } from "./store.server.ts";
 
 /**
- * The :\ARCHITECT\™ action contract, from InfinitumCorp/cndctr.
+ * The :\ARCHITECT\™ action contract, from InfinitumCorp/architect.
  * ODIN° can be played. It cannot approve a course, send a message, or release anything.
  *
  *   GET  /architect/v1/actions
