@@ -2,20 +2,22 @@ import { timingSafeEqual } from "node:crypto";
 import { getOdin } from "./store.server.ts";
 
 /**
- * The :\ARCHITECT\™ action contract, from InfinitumCorp/architct.
+ * The :\ARCHITECT\™ action contract, from InfinitumCorp/cndctr.
  * ODIN° can be played. It cannot approve a course, send a message, or release anything.
  *
- *   GET  /architct/v1/actions
- *   POST /architct/v1/actions/{name}   { runId, payload }
+ *   GET  /architect/v1/actions
+ *   POST /architect/v1/actions/{name}   { runId, payload }
+ *
+ * /architct/v1 is still served as an alias for one release.
  */
 
-export interface ArchitctAction {
+export interface ArchitectAction {
   name: string;
   description: string;
   risk: "read" | "write";
 }
 
-export const ARCHITCT_ACTIONS: ArchitctAction[] = [
+export const ARCHITECT_ACTIONS: ArchitectAction[] = [
   { name: "read_picture", description: "Read the exercise picture for a role.", risk: "read" },
   { name: "ask_picture", description: "Ask the exercise picture a question.", risk: "read" },
   { name: "list_courses", description: "List the courses visible to a role.", risk: "read" },
@@ -31,24 +33,25 @@ function roleOf(payload: Record<string, unknown>) {
 }
 
 function authorized(request: Request) {
-  const token = process.env.ARCHITCT_PRODUCT_TOKEN;
+  // ARCHITCT_PRODUCT_TOKEN is the previous name, still read for one release.
+  const token = process.env.ARCHITECT_PRODUCT_TOKEN ?? process.env.ARCHITCT_PRODUCT_TOKEN;
   if (!token) return true;
   const got = Buffer.from(request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "");
   const want = Buffer.from(token);
   return got.length === want.length && timingSafeEqual(got, want);
 }
 
-export async function handleArchitctRequest(request: Request, action: string): Promise<Response> {
+export async function handleArchitectRequest(request: Request, action: string): Promise<Response> {
   if (!authorized(request)) {
     return Response.json({ error: "invalid token" }, { status: 401 });
   }
   if (request.method === "GET" && !action) {
-    return Response.json(ARCHITCT_ACTIONS);
+    return Response.json(ARCHITECT_ACTIONS);
   }
   if (request.method !== "POST" || !action) {
     return Response.json({ error: "method not allowed" }, { status: 405 });
   }
-  const known = ARCHITCT_ACTIONS.find((item) => item.name === action);
+  const known = ARCHITECT_ACTIONS.find((item) => item.name === action);
   if (!known) {
     return Response.json({ error: `no action "${action}"` }, { status: 404 });
   }
