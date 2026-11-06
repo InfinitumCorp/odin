@@ -234,7 +234,7 @@ function seedWorld(): World {
       { id: "eidetic", name: "ei·det·ic™", layer: "Orient", state: "nominal", line: "Callsigns resolve only against the exercise roster.", classification: 3 },
       { id: "metatron", name: "METATRON™", layer: "Orient", state: "nominal", line: "Common picture for this exercise. Closed configuration.", classification: 1 },
       { id: "scalvs", name: "SCALVS.ai™", layer: "Decide", state: "nominal", line: "Drafts courses of action. It cannot approve them.", classification: 1 },
-      { id: "architct", name: ":\\ARCHITCT\\™", layer: "Decide", state: "nominal", line: "Turns an approved course into tasks. Commander approval first.", classification: 1 },
+      { id: "architct", name: ":\\ARCHITECT\\™", layer: "Decide", state: "nominal", line: "Turns an approved course into tasks. Commander approval first.", classification: 1 },
       { id: "aether", name: "ÆTHER™ MIL", layer: "Act", state: "degraded", line: "Mesh is up. East relay packet loss is elevated.", classification: 1 },
       { id: "fabric", name: "FABRIC™", layer: "Act", state: "nominal", line: "Secure voice and text across the mesh.", classification: 1 },
       { id: "eon", name: "E(O)N™", layer: "Act", state: "nominal", line: "Wearables on LANTERN teams are linked.", classification: 1 },
@@ -882,7 +882,7 @@ export class OdinService {
       signer: "commander",
       actor: ROLE_ACTOR.commander,
       subject: course.id,
-      summary: `Approved “${course.title}”. :\\ARCHITCT\\™ composed a rehearsal score. It is not running.${remark ? ` ${remark}` : ""}`,
+      summary: `Approved “${course.title}”. :\\ARCHITECT\\™ composed a rehearsal score. It is not running.${remark ? ` ${remark}` : ""}`,
       classification: 2,
     });
     await this.flush();
@@ -1015,7 +1015,7 @@ export class OdinService {
     this.queue({
       type: "attestation",
       signer: "system",
-      actor: ":\\ARCHITCT\\™",
+      actor: ":\\ARCHITECT\\™",
       subject: course.id,
       summary: `“${course.title}” is complete. The picture was updated.`,
       classification: course.classification,

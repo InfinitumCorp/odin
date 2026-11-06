@@ -109,7 +109,7 @@ export const SYSTEMS = [
   { id: "eidetic", name: "ei·det·ic™", layer: "Orient" },
   { id: "metatron", name: "METATRON™", layer: "Orient" },
   { id: "scalvs", name: "SCALVS.ai™", layer: "Decide" },
-  { id: "architct", name: ":\\ARCHITCT\\™", layer: "Decide" },
+  { id: "architct", name: ":\\ARCHITECT\\™", layer: "Decide" },
   { id: "aether", name: "ÆTHER™ MIL", layer: "Act" },
   { id: "fabric", name: "FABRIC™", layer: "Act" },
   { id: "eon", name: "E(O)N™", layer: "Act" },
@@ -193,7 +193,7 @@ export const WORK: readonly WorkItem[] = [
     name: "Draft, approve, task",
     done: true,
     detail:
-      "SCALVS.ai™ drafts one course per open situation. An analyst cannot approve. The commander approves or rejects. Approval creates tasks through :\\ARCHITCT\\™. Rejection writes an audit entry and creates no tasks.",
+      "SCALVS.ai™ drafts one course per open situation. An analyst cannot approve. The commander approves or rejects. Approval creates tasks through :\\ARCHITECT\\™. Rejection writes an audit entry and creates no tasks.",
   },
   {
     name: "Finish a course",

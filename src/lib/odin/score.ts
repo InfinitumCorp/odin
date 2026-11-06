@@ -6,7 +6,7 @@ export interface RehearsalScore {
   successCriteria: string[];
 }
 
-/** A Score in the :\ARCHITCT\™ sense. Rehearsal only: drafted, not run. */
+/** A Score in the :\ARCHITECT\™ sense. Rehearsal only: drafted, not run. */
 export function composeScore(course: { id: string; title: string }): RehearsalScore {
   return {
     id: `score-${course.id}`,
