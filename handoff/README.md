@@ -4,7 +4,7 @@ A record of the ODIN°™ exercise backend. It is not the running service. The s
 
 This is a simulation. It is not for operational use. It does not model weapons release.
 
-The service commit this record describes is `62031df`.
+The service commit this record describes is `eb7f110`.
 
 ## TypeScript
 

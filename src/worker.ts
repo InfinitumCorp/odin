@@ -1,17 +1,19 @@
 import { handleArchitectRequest } from "./lib/odin/architect.ts";
 import { handleOdinRequest } from "./lib/odin/http.ts";
+import type { EonEnv } from "./lib/odin/eon.ts";
 
 /**
  * Cloudflare Worker entry for the ODIN° exercise API.
  * The same handler serves /api/odin/* inside the console.
+ * E(O)N™ Access credentials come from Worker secrets in `env`.
  */
 export default {
-  async fetch(request: Request): Promise<Response> {
+  async fetch(request: Request, env: EonEnv = {}): Promise<Response> {
     const url = new URL(request.url);
     const prefix = "/api/odin";
     if (url.pathname === prefix || url.pathname.startsWith(`${prefix}/`)) {
       const splat = url.pathname.slice(prefix.length).replace(/^\//, "");
-      return handleOdinRequest(request, splat);
+      return handleOdinRequest(request, splat, { env });
     }
     // /architct/v1 is the previous path, kept as an alias for one release.
     for (const actions of ["/architect/v1/actions", "/architct/v1/actions"]) {
@@ -21,7 +23,7 @@ export default {
       }
     }
     if (url.pathname === "/health") {
-      return handleOdinRequest(request, "health");
+      return handleOdinRequest(request, "health", { env });
     }
     return new Response("ODIN° exercise API. GET /api/odin/health", {
       status: url.pathname === "/" ? 200 : 404,
