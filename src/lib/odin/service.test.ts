@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { createOdin } from "./service.ts";
 import { projectFeeds } from "./feeds.ts";
-import { ARCHITCT_ACTIONS, handleArchitctRequest } from "./architct.ts";
+import { ARCHITECT_ACTIONS, handleArchitectRequest } from "./architect.ts";
 import { isRedacted } from "./types.ts";
 
 describe("ODIN° exercise backend", () => {
@@ -166,10 +166,55 @@ describe("ODIN° exercise backend", () => {
     if (!tasked || isRedacted(tasked)) throw new Error("tasked course missing");
     assert.equal(tasked.score?.autonomy, "rehearsal");
     assert.equal(tasked.score?.permissions[0], "ecosystem");
-    const names = ARCHITCT_ACTIONS.map((item) => item.name);
+    const names = ARCHITECT_ACTIONS.map((item) => item.name);
     assert.equal(names.includes("decide"), false);
-    const missing = await handleArchitctRequest(new Request("http://local/architct/v1/actions/decide", { method: "POST", body: "{}" }), "decide");
-    assert.equal(missing.status, 404);
+    const previous = process.env.ARCHITECT_PRODUCT_TOKEN;
+    const legacy = process.env.ARCHITCT_PRODUCT_TOKEN;
+    process.env.ARCHITECT_PRODUCT_TOKEN = "product-token";
+    delete process.env.ARCHITCT_PRODUCT_TOKEN;
+    try {
+      const missing = await handleArchitectRequest(new Request("http://local/architect/v1/actions/decide", {
+        method: "POST",
+        headers: { authorization: "Bearer product-token" },
+        body: "{}",
+      }), "decide");
+      assert.equal(missing.status, 404);
+    } finally {
+      if (previous === undefined) delete process.env.ARCHITECT_PRODUCT_TOKEN;
+      else process.env.ARCHITECT_PRODUCT_TOKEN = previous;
+      if (legacy === undefined) delete process.env.ARCHITCT_PRODUCT_TOKEN;
+      else process.env.ARCHITCT_PRODUCT_TOKEN = legacy;
+    }
+  });
+
+  it("refuses Architect when the product token is missing or wrong", async () => {
+    const previous = process.env.ARCHITECT_PRODUCT_TOKEN;
+    const legacy = process.env.ARCHITCT_PRODUCT_TOKEN;
+    delete process.env.ARCHITECT_PRODUCT_TOKEN;
+    delete process.env.ARCHITCT_PRODUCT_TOKEN;
+    try {
+      const open = await handleArchitectRequest(new Request("http://local/architect/v1/actions/file_note", {
+        method: "POST",
+        body: JSON.stringify({ payload: { role: "commander", note: "Tunnel mouth is clear." } }),
+      }), "file_note");
+      assert.equal(open.status, 401);
+      process.env.ARCHITCT_PRODUCT_TOKEN = "product-token";
+      const wrong = await handleArchitectRequest(new Request("http://local/architect/v1/actions/file_note", {
+        method: "POST",
+        headers: { authorization: "Bearer other" },
+        body: "{}",
+      }), "file_note");
+      assert.equal(wrong.status, 401);
+      const legacyOk = await handleArchitectRequest(new Request("http://local/architect/v1/actions", {
+        headers: { authorization: "Bearer product-token" },
+      }), "");
+      assert.equal(legacyOk.status, 200);
+    } finally {
+      if (previous === undefined) delete process.env.ARCHITECT_PRODUCT_TOKEN;
+      else process.env.ARCHITECT_PRODUCT_TOKEN = previous;
+      if (legacy === undefined) delete process.env.ARCHITCT_PRODUCT_TOKEN;
+      else process.env.ARCHITCT_PRODUCT_TOKEN = legacy;
+    }
   });
 
   it("files a commander note the observer cannot read", async () => {

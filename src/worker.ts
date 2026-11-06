@@ -1,4 +1,4 @@
-import { handleArchitctRequest } from "./lib/odin/architct.ts";
+import { handleArchitectRequest } from "./lib/odin/architect.ts";
 import { handleOdinRequest } from "./lib/odin/http.ts";
 import type { EonEnv } from "./lib/odin/eon.ts";
 
@@ -15,10 +15,12 @@ export default {
       const splat = url.pathname.slice(prefix.length).replace(/^\//, "");
       return handleOdinRequest(request, splat, { env });
     }
-    const actions = "/architct/v1/actions";
-    if (url.pathname === actions || url.pathname.startsWith(`${actions}/`)) {
-      const action = url.pathname.slice(actions.length).replace(/^\//, "");
-      return handleArchitctRequest(request, action);
+    // /architct/v1 is the previous path, kept as an alias for one release.
+    for (const actions of ["/architect/v1/actions", "/architct/v1/actions"]) {
+      if (url.pathname === actions || url.pathname.startsWith(`${actions}/`)) {
+        const action = url.pathname.slice(actions.length).replace(/^\//, "");
+        return handleArchitectRequest(request, action);
+      }
     }
     if (url.pathname === "/health") {
       return handleOdinRequest(request, "health", { env });
