@@ -326,6 +326,15 @@ function PictureView({
       </ul>
 
       <h2 className="h3 mt-12">Movement</h2>
+      <p className="label mt-3">
+        <Rich
+          text={
+            picture.eon?.connected
+              ? `Sources: ODIN° exercise tracks and E(O)N™ MIL emitter fixes, read only. E(O)N™ tick ${picture.eon.tick ?? "—"}${picture.eon.generatedAt ? ` · ${picture.eon.generatedAt}` : ""}.`
+              : `Sources: ODIN° exercise tracks. ${picture.eon?.line ?? "The E(O)N™ feed is not connected."}`
+          }
+        />
+      </p>
       <ul className="mt-6 flex flex-col gap-8">
         {picture.tracks.map((track) => (
           <li key={track.id}>
@@ -335,7 +344,11 @@ function PictureView({
               <>
                 <p className="body">
                   <Rich text={track.name} />
-                  <span className="text-muted"> · grid {track.grid}</span>
+                  <span className="text-muted">
+                    {" "}
+                    · grid {track.grid}
+                    {track.frame ? ` (${track.frame} frame)` : ""}
+                  </span>
                 </p>
                 <p className="body mt-2 text-muted">
                   <Rich text={`${track.source}. ${track.note}`} />
