@@ -88,7 +88,7 @@ export const SYSTEMS = [
     { id: "eidetic", name: "ei·det·ic™", layer: "Orient" },
     { id: "metatron", name: "METATRON™", layer: "Orient" },
     { id: "scalvs", name: "SCALVS.ai™", layer: "Decide" },
-    { id: "architct", name: ":\\ARCHITECT\\™", layer: "Decide" },
+    { id: "architect", name: ":\\ARCHITECT\\™", layer: "Decide" },
     { id: "aether", name: "ÆTHER™ MIL", layer: "Act" },
     { id: "fabric", name: "FABRIC™", layer: "Act" },
     { id: "eon", name: "E(O)N™", layer: "Act" },

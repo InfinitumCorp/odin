@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { createOdin } from "./service.ts";
 import { projectFeeds } from "./feeds.ts";
-import { ARCHITCT_ACTIONS, handleArchitctRequest } from "./architct.ts";
+import { ARCHITECT_ACTIONS, handleArchitectRequest } from "./architect.ts";
 import { isRedacted } from "./types.ts";
 
 describe("ODIN° exercise backend", () => {
@@ -166,9 +166,9 @@ describe("ODIN° exercise backend", () => {
     if (!tasked || isRedacted(tasked)) throw new Error("tasked course missing");
     assert.equal(tasked.score?.autonomy, "rehearsal");
     assert.equal(tasked.score?.permissions[0], "ecosystem");
-    const names = ARCHITCT_ACTIONS.map((item) => item.name);
+    const names = ARCHITECT_ACTIONS.map((item) => item.name);
     assert.equal(names.includes("decide"), false);
-    const missing = await handleArchitctRequest(new Request("http://local/architct/v1/actions/decide", { method: "POST", body: "{}" }), "decide");
+    const missing = await handleArchitectRequest(new Request("http://local/architect/v1/actions/decide", { method: "POST", body: "{}" }), "decide");
     assert.equal(missing.status, 404);
   });
 
