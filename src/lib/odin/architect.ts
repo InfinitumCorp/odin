@@ -35,7 +35,7 @@ function roleOf(payload: Record<string, unknown>) {
 function authorized(request: Request) {
   // ARCHITCT_PRODUCT_TOKEN is the previous name, still read for one release.
   const token = process.env.ARCHITECT_PRODUCT_TOKEN ?? process.env.ARCHITCT_PRODUCT_TOKEN;
-  if (!token) return true;
+  if (!token) return false;
   const got = Buffer.from(request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "");
   const want = Buffer.from(token);
   return got.length === want.length && timingSafeEqual(got, want);
