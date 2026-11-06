@@ -15,7 +15,7 @@ This is a simulation. It is not for operational use. It does not model weapons r
 - Holds FABRIC™ messages while the east relay is degraded, and releases them when that course is finished.
 - Projects the picture into three public shapes: an ontology object, a Lattice entity, and a launch record. There is no live connection to those companies.
 - Reads E(O)N™ MIL emitter fixes, read only. See [E(O)N™ MIL feed](#eon-mil-feed).
-- Speaks the :\ARCHITECT\\™ action contract from InfinitumCorp/cndctr. An approval composes a rehearsal score. Architect cannot approve, send, or task itself.
+- Speaks the :\ARCHITECT\\™ action contract from InfinitumCorp/architect. An approval composes a rehearsal score. Architect cannot approve, send, or task itself.
 
 ## HTTP
 
