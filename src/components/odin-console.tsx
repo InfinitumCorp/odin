@@ -412,7 +412,7 @@ function DecideView({
   return (
     <div className="mt-10">
       <p className="body text-muted">
-        SCALVS.ai™ drafts. /CNDCTR/™ tasks only after the commander approves. Nothing here is a use of force.
+        SCALVS.ai™ drafts. :\ARCHITCT\™ tasks only after the commander approves. Nothing here is a use of force.
       </p>
       <button
         type="button"
