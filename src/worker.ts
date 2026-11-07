@@ -1,3 +1,4 @@
+import { proxyLabyrinthRequest } from "./labyrinth/index.ts";
 import { handleArchitectRequest } from "./lib/odin/architect.ts";
 import { handleOdinRequest } from "./lib/odin/http.ts";
 import type { EonEnv } from "./lib/odin/eon.ts";
@@ -10,6 +11,7 @@ import type { EonEnv } from "./lib/odin/eon.ts";
 export default {
   async fetch(request: Request, env: EonEnv = {}): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname === "/api/labyrinth") return proxyLabyrinthRequest(request, env.LBRNTH_ENDPOINT, "odin");
     const prefix = "/api/odin";
     if (url.pathname === prefix || url.pathname.startsWith(`${prefix}/`)) {
       const splat = url.pathname.slice(prefix.length).replace(/^\//, "");

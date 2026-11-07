@@ -17,6 +17,8 @@ export const EON_TIMEOUT_MS = 4000;
 export const EON_TTL_MS = 10_000;
 
 export interface EonEnv {
+  /** Central CID-authenticated repository service. */
+  LBRNTH_ENDPOINT?: string;
   EON_FEED_URL?: string;
   EON_ACCESS_CLIENT_ID?: string;
   EON_ACCESS_CLIENT_SECRET?: string;

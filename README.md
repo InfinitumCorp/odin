@@ -83,3 +83,8 @@ npx wrangler deploy
 Secrets are set with `wrangler secret put`. None are required for the exercise. `EON_ACCESS_CLIENT_ID` and `EON_ACCESS_CLIENT_SECRET` connect the E(O)N™ MIL feed. Do not commit tokens.
 
 The console in this repository talks to the same service. Publishing the console from the Grok preview uses the platform host; the Worker is the API host named above.
+
+## Labyrinth client repositories
+
+Explicit Cumulus ID-authenticated artifact save/load SDK and `/api/labyrinth` relay.
+Existing product auth remains unchanged. [Integration and rollout contract](LABYRINTH.md).
