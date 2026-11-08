@@ -97,7 +97,7 @@ export function OdinConsole() {
           <button
             key={item.id}
             type="button"
-            className={`h-11 rounded-full px-4 ${role === item.id ? "bg-ink text-paper" : "text-muted"}`}
+            className={`h-11 rounded-none px-4 ${role === item.id ? "bg-ink text-paper" : "text-muted"}`}
             onClick={() => {
               setRole(item.id);
               setAnswer("");
@@ -135,10 +135,10 @@ export function OdinConsole() {
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
             placeholder="What needs a commander?"
-            className="body h-12 min-w-0 flex-1 rounded-xl border border-line bg-paper px-4 text-ink"
+            className="body h-12 min-w-0 flex-1 rounded-none border border-line bg-paper px-4 text-ink"
             maxLength={400}
           />
-          <button type="submit" disabled={busy || !question.trim()} className="h-12 rounded-xl bg-ink px-6 text-paper disabled:opacity-40">
+          <button type="submit" disabled={busy || !question.trim()} className="h-12 rounded-none bg-ink px-6 text-paper disabled:opacity-40">
             Ask
           </button>
         </form>
@@ -155,7 +155,7 @@ export function OdinConsole() {
           <button
             key={item}
             type="button"
-            className={`h-11 rounded-full px-4 ${view === item ? "bg-ink text-paper" : "text-muted"}`}
+            className={`h-11 rounded-none px-4 ${view === item ? "bg-ink text-paper" : "text-muted"}`}
             onClick={() => setView(item)}
           >
             {item}
@@ -281,12 +281,12 @@ function PictureView({
           onChange={(event) => onFieldNote(event.target.value)}
           placeholder="What you saw"
           maxLength={500}
-          className="body h-12 rounded-xl border border-line bg-paper px-4"
+          className="body h-12 rounded-none border border-line bg-paper px-4"
         />
         <button
           type="submit"
           disabled={busy || !fieldNote.trim()}
-          className="h-12 self-start rounded-xl border border-line px-6 disabled:opacity-40"
+          className="h-12 self-start rounded-none border border-line px-6 disabled:opacity-40"
         >
           File
         </button>
@@ -433,7 +433,7 @@ function DecideView({
         type="button"
         disabled={busy || role === "observer"}
         onClick={onDraft}
-        className={`mt-6 h-12 rounded-xl px-6 disabled:opacity-40 ${hasDraft ? "border border-line bg-paper text-ink" : "bg-ink text-paper"}`}
+        className={`mt-6 h-12 rounded-none px-6 disabled:opacity-40 ${hasDraft ? "border border-line bg-paper text-ink" : "bg-ink text-paper"}`}
       >
         Draft courses
       </button>
@@ -469,14 +469,14 @@ function DecideView({
                     onChange={(event) => onNote(event.target.value)}
                     placeholder="Note for the record"
                     maxLength={400}
-                    className="body h-12 rounded-xl border border-line bg-paper px-4"
+                    className="body h-12 rounded-none border border-line bg-paper px-4"
                   />
                   <div className="flex flex-wrap gap-3">
                     <button
                       type="button"
                       disabled={busy || role !== "commander"}
                       onClick={() => onDecide(course.id, "approve")}
-                      className="h-12 rounded-xl bg-ink px-6 text-paper disabled:opacity-40"
+                      className="h-12 rounded-none bg-ink px-6 text-paper disabled:opacity-40"
                     >
                       Approve
                     </button>
@@ -484,7 +484,7 @@ function DecideView({
                       type="button"
                       disabled={busy || role !== "commander"}
                       onClick={() => onDecide(course.id, "reject")}
-                      className="h-12 rounded-xl border border-line bg-paper px-6 disabled:opacity-40"
+                      className="h-12 rounded-none border border-line bg-paper px-6 disabled:opacity-40"
                     >
                       Reject
                     </button>
@@ -520,7 +520,7 @@ function DecideView({
                           type="button"
                           disabled={busy || role === "observer"}
                           onClick={() => onTask(task.id, "in-progress")}
-                          className="h-11 rounded-xl border border-line px-4 disabled:opacity-40"
+                          className="h-11 rounded-none border border-line px-4 disabled:opacity-40"
                         >
                           Start
                         </button>
@@ -529,7 +529,7 @@ function DecideView({
                         type="button"
                         disabled={busy || role === "observer"}
                         onClick={() => onTask(task.id, "done")}
-                        className="h-11 rounded-xl border border-line px-4 disabled:opacity-40"
+                        className="h-11 rounded-none border border-line px-4 disabled:opacity-40"
                       >
                         Done
                       </button>
@@ -583,20 +583,20 @@ function RecordView({
         <input
           value={to}
           onChange={(event) => onTo(event.target.value)}
-          className="body h-12 rounded-xl border border-line px-4"
+          className="body h-12 rounded-none border border-line px-4"
           maxLength={80}
         />
         <input
           value={body}
           onChange={(event) => onBody(event.target.value)}
           placeholder="A message, not an order"
-          className="body h-12 rounded-xl border border-line px-4"
+          className="body h-12 rounded-none border border-line px-4"
           maxLength={500}
         />
         <button
           type="submit"
           disabled={busy || !body.trim()}
-          className="h-12 self-start rounded-xl border border-line px-6 disabled:opacity-40"
+          className="h-12 self-start rounded-none border border-line px-6 disabled:opacity-40"
         >
           Send
         </button>
