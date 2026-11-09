@@ -1,3 +1,5 @@
+import type { EonStatus } from "./eon.ts";
+
 export const ROLES = ["observer", "analyst", "commander"] as const;
 export type Role = (typeof ROLES)[number];
 
@@ -34,6 +36,8 @@ export interface TrackView {
   source: string;
   note: string;
   grid: string;
+  /** Set when the grid is in another product's frame, e.g. E(O)N™ QUIETFIELD metres. */
+  frame?: string;
   confidence: string;
   classification: ClassName;
 }
@@ -70,6 +74,14 @@ export interface CourseView {
   summary: string;
   steps: string[];
   status: "draft" | "approved" | "rejected" | "tasked" | "complete";
+  refusal: string | null;
+  score: {
+    id: string;
+    goal: string;
+    autonomy: "rehearsal";
+    permissions: ["ecosystem"];
+    successCriteria: string[];
+  } | null;
   classification: ClassName;
 }
 
@@ -129,6 +141,8 @@ export interface Picture {
   ledgerHead: string;
   ledgerLength: number;
   ledgerOk: boolean;
+  /** Read-only E(O)N™ MIL feed status. Absent until the feed is merged. */
+  eon?: EonStatus;
 }
 
 export interface CommandFailure {

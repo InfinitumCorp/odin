@@ -10,7 +10,7 @@
  * does not model weapons, targeting, or real locations.
  */
 export const REPO = "https://github.com/InfinitumCorp/odin";
-export const HEAD = "62031df";
+export const HEAD = "eb7f110";
 export const EXERCISE = "NORTHLANTERN";
 export const PRODUCT = "ODIN°™";
 /** Exercise labels, not accounts and not real clearances. */
@@ -29,6 +29,7 @@ export const RULES = {
     missionDataStaysOffThePublicNexus: true,
     omitted: ["#THRONE"],
     approval: "An analyst may draft. Only the commander may approve or reject.",
+    eonFeed: "ODIN° reads E(O)N™ MIL emitter fixes only. It never writes back. Wearer positions, health, EMCON and engagements do not leave E(O)N™.",
     hostNamedInBuildRules: "Cloudflare Workers, project name odin",
     hostActuallyDeployed: "Not deployed. wrangler.toml and src/worker.ts are in the repo. No Cloudflare API token was available.",
 };
@@ -37,6 +38,7 @@ export const COMMITS = [
     { sha: "9c596b2", did: "Field notes. [HRVST]™ writes a note at the filer's clearance." },
     { sha: "4b72a4a", did: "Finishing every task in an approved course updates the picture." },
     { sha: "62031df", did: "FABRIC™ holds messages while the east relay is degraded." },
+    { sha: "eb7f110", did: "E(O)N™ MIL emitter fixes join the picture as CUI, read only." },
 ];
 export const FILES = {
     "src/lib/odin/service.ts": "Exercise clock, picture, courses, tasks, traffic, notes.",
@@ -45,6 +47,8 @@ export const FILES = {
     "src/lib/odin/http.ts": "HTTP adapter. Used by the TanStack route and the Worker.",
     "src/lib/odin/api.ts": "TanStack server functions. The console calls these.",
     "src/lib/odin/store.server.ts": "One process-local service. It is not durable.",
+    "src/lib/odin/eon.ts": "Read-only E(O)N™ MIL feed pull. Timeout, cache, Access headers, CUI merge.",
+    "src/lib/odin/eon.test.ts": "Fake E(O)N™ feed: connected, no token, down, timeout, Access refusal, bad JSON.",
     "src/lib/odin/service.test.ts": "Node test runner. Six tests, no network.",
     "src/lib/odin/firmament/ledger.ts": "Private hash chain. Ed25519. Not the public nexus.",
     "src/lib/odin/firmament/keys.ts": "Key generation and signature check.",
@@ -88,7 +92,7 @@ export const SYSTEMS = [
     { id: "eidetic", name: "ei·det·ic™", layer: "Orient" },
     { id: "metatron", name: "METATRON™", layer: "Orient" },
     { id: "scalvs", name: "SCALVS.ai™", layer: "Decide" },
-    { id: "cndctr", name: "/CNDCTR/™", layer: "Decide" },
+    { id: "architect", name: ":\\ARCHITECT\\™", layer: "Decide" },
     { id: "aether", name: "ÆTHER™ MIL", layer: "Act" },
     { id: "fabric", name: "FABRIC™", layer: "Act" },
     { id: "eon", name: "E(O)N™", layer: "Act" },
@@ -159,7 +163,7 @@ export const WORK = [
     {
         name: "Draft, approve, task",
         done: true,
-        detail: "SCALVS.ai™ drafts one course per open situation. An analyst cannot approve. The commander approves or rejects. Approval creates tasks through /CNDCTR/™. Rejection writes an audit entry and creates no tasks.",
+        detail: "SCALVS.ai™ drafts one course per open situation. An analyst cannot approve. The commander approves or rejects. Approval creates tasks through :\\ARCHITECT\\™. Rejection writes an audit entry and creates no tasks.",
     },
     {
         name: "Finish a course",
@@ -182,6 +186,21 @@ export const WORK = [
         detail: "White page, Helvetica stack, one column. Three views: Picture, Decide, Record. Role switcher. Field note, course buttons, task buttons, and a FABRIC™ send box. Withheld rows stay visible as withheld.",
     },
     {
+        name: "Reject and redraft",
+        done: true,
+        detail: "A commander rejection is stored on the course and the ledger. The situation opens again, so an analyst can draft another course. The refused course stays on the picture.",
+    },
+    {
+        name: "Public feed shapes",
+        done: true,
+        detail: "The picture is also readable as an ontology object, a Lattice entity, and a launch record. No live connection. No weapons release. SpaceX's own GitHub org has no launch SDK; the launch fields follow the public v4 record.",
+    },
+    {
+        name: "E(O)N™ MIL emitter feed",
+        done: true,
+        detail: "ODIN° reads GET https://eon.infinitumcorp.workers.dev/api/eon/feed/odin with a Cloudflare Access service token (EON_ACCESS_CLIENT_ID, EON_ACCESS_CLIENT_SECRET). It merges the eon- tracks into the picture as CUI, keeps the grid as given, and labels it with E(O)N™'s QUIETFIELD frame; there is no mapping to the ODIN° range grid. Every picture carries eon: state, tick, frame. A 4 second timeout, a 10 second cache. Feed down, bad JSON, or no token leaves the picture working and says the feed is not connected. ODIN° never writes back.",
+    },
+    {
         name: "Worker package",
         done: false,
         detail: "wrangler.toml and src/worker.ts are written. Deploy was not run.",
@@ -190,6 +209,11 @@ export const WORK = [
         name: "Durable ledger",
         done: false,
         detail: "Memory only. A restart opens a new exercise.",
+    },
+    {
+        name: "E(O)N™ Access token",
+        done: false,
+        detail: "No Access service token was created and no Worker secret was set. Until then the picture says the E(O)N™ feed is not connected.",
     },
 ];
 export const NOT_DONE = WORK.filter((item) => !item.done).map((item) => item.name);

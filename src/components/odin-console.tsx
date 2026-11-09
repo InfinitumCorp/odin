@@ -10,6 +10,7 @@ import {
   sendTraffic,
 } from "@/lib/odin/api";
 import { isRedacted, type Picture, type Role } from "@/lib/odin/types";
+import { projectFeeds } from "@/lib/odin/feeds";
 import { Rich } from "@/components/rich";
 
 const ROLES: { id: Role; label: string }[] = [
@@ -18,7 +19,7 @@ const ROLES: { id: Role; label: string }[] = [
   { id: "commander", label: "Commander" },
 ];
 
-const VIEWS = ["Picture", "Decide", "Record"] as const;
+const VIEWS = ["Picture", "Decide", "Record", "Feeds"] as const;
 type View = (typeof VIEWS)[number];
 
 const LAYERS = ["Observe", "Orient", "Decide", "Act", "Foundation"];
@@ -96,7 +97,7 @@ export function OdinConsole() {
           <button
             key={item.id}
             type="button"
-            className={`h-11 rounded-full px-4 ${role === item.id ? "bg-ink text-paper" : "text-muted"}`}
+            className={`h-11 rounded-none px-4 ${role === item.id ? "bg-ink text-paper" : "text-muted"}`}
             onClick={() => {
               setRole(item.id);
               setAnswer("");
@@ -134,10 +135,10 @@ export function OdinConsole() {
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
             placeholder="What needs a commander?"
-            className="body h-12 min-w-0 flex-1 rounded-xl border border-line bg-paper px-4 text-ink"
+            className="body h-12 min-w-0 flex-1 rounded-none border border-line bg-paper px-4 text-ink"
             maxLength={400}
           />
-          <button type="submit" disabled={busy || !question.trim()} className="h-12 rounded-xl bg-ink px-6 text-paper disabled:opacity-40">
+          <button type="submit" disabled={busy || !question.trim()} className="h-12 rounded-none bg-ink px-6 text-paper disabled:opacity-40">
             Ask
           </button>
         </form>
@@ -154,7 +155,7 @@ export function OdinConsole() {
           <button
             key={item}
             type="button"
-            className={`h-11 rounded-full px-4 ${view === item ? "bg-ink text-paper" : "text-muted"}`}
+            className={`h-11 rounded-none px-4 ${view === item ? "bg-ink text-paper" : "text-muted"}`}
             onClick={() => setView(item)}
           >
             {item}
@@ -240,6 +241,7 @@ export function OdinConsole() {
           }
         />
       ) : null}
+      {picture && view === "Feeds" ? <FeedsView picture={picture} /> : null}
     </main>
   );
 }
@@ -279,12 +281,12 @@ function PictureView({
           onChange={(event) => onFieldNote(event.target.value)}
           placeholder="What you saw"
           maxLength={500}
-          className="body h-12 rounded-xl border border-line bg-paper px-4"
+          className="body h-12 rounded-none border border-line bg-paper px-4"
         />
         <button
           type="submit"
           disabled={busy || !fieldNote.trim()}
-          className="h-12 self-start rounded-xl border border-line px-6 disabled:opacity-40"
+          className="h-12 self-start rounded-none border border-line px-6 disabled:opacity-40"
         >
           File
         </button>
@@ -324,6 +326,15 @@ function PictureView({
       </ul>
 
       <h2 className="h3 mt-12">Movement</h2>
+      <p className="label mt-3">
+        <Rich
+          text={
+            picture.eon?.connected
+              ? `Sources: ODIN° exercise tracks and E(O)N™ MIL emitter fixes, read only. E(O)N™ tick ${picture.eon.tick ?? "—"}${picture.eon.generatedAt ? ` · ${picture.eon.generatedAt}` : ""}.`
+              : `Sources: ODIN° exercise tracks. ${picture.eon?.line ?? "The E(O)N™ feed is not connected."}`
+          }
+        />
+      </p>
       <ul className="mt-6 flex flex-col gap-8">
         {picture.tracks.map((track) => (
           <li key={track.id}>
@@ -333,7 +344,11 @@ function PictureView({
               <>
                 <p className="body">
                   <Rich text={track.name} />
-                  <span className="text-muted"> · grid {track.grid}</span>
+                  <span className="text-muted">
+                    {" "}
+                    · grid {track.grid}
+                    {track.frame ? ` (${track.frame} frame)` : ""}
+                  </span>
                 </p>
                 <p className="body mt-2 text-muted">
                   <Rich text={`${track.source}. ${track.note}`} />
@@ -412,13 +427,13 @@ function DecideView({
   return (
     <div className="mt-10">
       <p className="body text-muted">
-        <Rich text="SCALVS.ai™ drafts. /CNDCTR/™ tasks only after the commander approves. Nothing here is a use of force." />
+        <Rich text="SCALVS.ai™ drafts. :\\ARCHITECT\\™ tasks only after the commander approves. Nothing here is a use of force." />
       </p>
       <button
         type="button"
         disabled={busy || role === "observer"}
         onClick={onDraft}
-        className={`mt-6 h-12 rounded-xl px-6 disabled:opacity-40 ${hasDraft ? "border border-line bg-paper text-ink" : "bg-ink text-paper"}`}
+        className={`mt-6 h-12 rounded-none px-6 disabled:opacity-40 ${hasDraft ? "border border-line bg-paper text-ink" : "bg-ink text-paper"}`}
       >
         Draft courses
       </button>
@@ -434,6 +449,12 @@ function DecideView({
               <p className="label">{course.status}</p>
               <h2 className="h3 mt-3">{course.title}</h2>
               <p className="body mt-4">{course.summary}</p>
+              {course.refusal ? <p className="body mt-4 text-muted">{course.refusal}</p> : null}
+              {course.score ? (
+                <p className="body mt-4 text-muted">
+                  <Rich text=":\\ARCHITECT\\™ composed a rehearsal score. It is not running." />
+                </p>
+              ) : null}
               <ul className="mt-4 flex flex-col gap-2">
                 {course.steps.map((step) => (
                   <li key={step} className="body text-muted">
@@ -448,14 +469,14 @@ function DecideView({
                     onChange={(event) => onNote(event.target.value)}
                     placeholder="Note for the record"
                     maxLength={400}
-                    className="body h-12 rounded-xl border border-line bg-paper px-4"
+                    className="body h-12 rounded-none border border-line bg-paper px-4"
                   />
                   <div className="flex flex-wrap gap-3">
                     <button
                       type="button"
                       disabled={busy || role !== "commander"}
                       onClick={() => onDecide(course.id, "approve")}
-                      className="h-12 rounded-xl bg-ink px-6 text-paper disabled:opacity-40"
+                      className="h-12 rounded-none bg-ink px-6 text-paper disabled:opacity-40"
                     >
                       Approve
                     </button>
@@ -463,7 +484,7 @@ function DecideView({
                       type="button"
                       disabled={busy || role !== "commander"}
                       onClick={() => onDecide(course.id, "reject")}
-                      className="h-12 rounded-xl border border-line bg-paper px-6 disabled:opacity-40"
+                      className="h-12 rounded-none border border-line bg-paper px-6 disabled:opacity-40"
                     >
                       Reject
                     </button>
@@ -499,7 +520,7 @@ function DecideView({
                           type="button"
                           disabled={busy || role === "observer"}
                           onClick={() => onTask(task.id, "in-progress")}
-                          className="h-11 rounded-xl border border-line px-4 disabled:opacity-40"
+                          className="h-11 rounded-none border border-line px-4 disabled:opacity-40"
                         >
                           Start
                         </button>
@@ -508,7 +529,7 @@ function DecideView({
                         type="button"
                         disabled={busy || role === "observer"}
                         onClick={() => onTask(task.id, "done")}
-                        className="h-11 rounded-xl border border-line px-4 disabled:opacity-40"
+                        className="h-11 rounded-none border border-line px-4 disabled:opacity-40"
                       >
                         Done
                       </button>
@@ -564,20 +585,20 @@ function RecordView({
         <input
           value={to}
           onChange={(event) => onTo(event.target.value)}
-          className="body h-12 rounded-xl border border-line px-4"
+          className="body h-12 rounded-none border border-line px-4"
           maxLength={80}
         />
         <input
           value={body}
           onChange={(event) => onBody(event.target.value)}
           placeholder="A message, not an order"
-          className="body h-12 rounded-xl border border-line px-4"
+          className="body h-12 rounded-none border border-line px-4"
           maxLength={500}
         />
         <button
           type="submit"
           disabled={busy || !body.trim()}
-          className="h-12 self-start rounded-xl border border-line px-6 disabled:opacity-40"
+          className="h-12 self-start rounded-none border border-line px-6 disabled:opacity-40"
         >
           Send
         </button>
@@ -615,6 +636,82 @@ function RecordView({
           </li>
         ))}
       </ol>
+    </div>
+  );
+}
+
+function FeedsView({ picture }: { picture: Picture }) {
+  const feeds = projectFeeds(picture);
+  return (
+    <div className="mt-10">
+      <p className="body">{feeds.note}</p>
+      <ul className="mt-8 flex flex-col gap-6">
+        {feeds.sources.map((source) => (
+          <li key={source.id}>
+            <p className="body">{source.name}</p>
+            <p className="body mt-2 text-muted">
+              {source.repo}. {source.shape}
+            </p>
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="h3 mt-12">Objects</h2>
+      <ul className="mt-6 flex flex-col gap-8">
+        {feeds.objects.map((object) => (
+          <li key={isRedacted(object) ? object.id : object.primaryKey}>
+            {isRedacted(object) ? (
+              <Withheld classification={object.classification} />
+            ) : (
+              <>
+                <p className="body">
+                  <Rich text={object.title} />
+                  <span className="text-muted"> · {object.properties.grid}</span>
+                </p>
+                <p className="body mt-2 text-muted">
+                  <Rich text={`${object.properties.source}. ${object.properties.note}`} />
+                </p>
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="h3 mt-12">Entities</h2>
+      <ul className="mt-6 flex flex-col gap-8">
+        {feeds.entities.map((entity) => (
+          <li key={isRedacted(entity) ? entity.id : entity.entityId}>
+            {isRedacted(entity) ? (
+              <Withheld classification={entity.classification} />
+            ) : (
+              <>
+                <p className="body">
+                  <Rich text={entity.aliases[0]?.name ?? entity.entityId} />
+                  <span className="text-muted"> · grid {entity.location.grid}</span>
+                </p>
+                <p className="body mt-2 text-muted">
+                  <Rich text={`${entity.provenance.source}. ${entity.description}`} />
+                </p>
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="h3 mt-12">Launches</h2>
+      <ul className="mt-6 flex flex-col gap-8">
+        {feeds.launches.map((launch) => (
+          <li key={launch.id}>
+            <p className="body">
+              <Rich text={launch.name} />
+              <span className="text-muted"> · {launch.upcoming ? "upcoming" : "held"}</span>
+            </p>
+            <p className="body mt-2 text-muted">
+              <Rich text={`${launch.rocket} from ${launch.launchpad}. ${launch.details}`} />
+            </p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

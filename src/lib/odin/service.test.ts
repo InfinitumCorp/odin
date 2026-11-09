@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { createOdin } from "./service.ts";
+import { projectFeeds } from "./feeds.ts";
+import { ARCHITECT_ACTIONS, handleArchitectRequest } from "./architect.ts";
 import { isRedacted } from "./types.ts";
 
 describe("ODIN° exercise backend", () => {
@@ -109,6 +111,112 @@ describe("ODIN° exercise backend", () => {
     assert.equal(next.held, false);
   });
 
+  it("reopens a situation after the commander rejects the course", async () => {
+    const odin = await createOdin();
+    const drafted = await odin.draft("analyst");
+    assert.equal(drafted.ok, true);
+    const course = drafted.picture.courses.find((item) => !isRedacted(item) && item.title.includes("east relay"));
+    if (!course || isRedacted(course)) throw new Error("course missing");
+    const rejected = await odin.decide("commander", course.id, "reject", "Use the north relay instead.");
+    assert.equal(rejected.ok, true);
+    if (!rejected.ok) return;
+    const kept = rejected.picture.courses.find((item) => item.id === course.id);
+    if (!kept || isRedacted(kept)) throw new Error("rejected course missing");
+    assert.equal(kept.status, "rejected");
+    assert.match(kept.refusal ?? "", /north relay/);
+    const open = rejected.picture.alerts.find((item) => item.id === "alt-mesh");
+    if (!open || isRedacted(open)) throw new Error("alert missing");
+    assert.equal(open.needsDecision, true);
+    const again = await odin.draft("analyst");
+    assert.equal(again.ok, true);
+    if (!again.ok) return;
+    const fresh = again.picture.courses.filter(
+      (item) => !isRedacted(item) && item.status === "draft" && item.title.includes("east relay"),
+    );
+    assert.equal(fresh.length, 1);
+    const next = fresh[0];
+    if (!next || isRedacted(next)) throw new Error("second draft missing");
+    assert.notEqual(next.id, course.id);
+    assert.equal((await odin.verify()).ok, true);
+  });
+
+  it("projects the picture into the three public shapes", async () => {
+    const odin = await createOdin();
+    const feeds = projectFeeds(await odin.picture("observer"));
+    assert.equal(feeds.sources.length, 3);
+    const depot = feeds.entities.find((item) => ("entityId" in item ? item.entityId : item.id) === "trk-depot");
+    assert.ok(depot && isRedacted(depot));
+    const launch = feeds.launches[0];
+    assert.equal(launch?.rocket, "POLLEN™");
+    assert.match(launch?.details ?? "", /not a SpaceX/i);
+    assert.equal(launch?.success, null);
+  });
+
+  it("composes a rehearsal score and does not let Architect approve", async () => {
+    const odin = await createOdin();
+    const drafted = await odin.draft("analyst");
+    assert.equal(drafted.ok, true);
+    if (!drafted.ok) return;
+    const course = drafted.picture.courses.find((item) => !isRedacted(item) && item.status === "draft");
+    if (!course || isRedacted(course)) throw new Error("course missing");
+    const approved = await odin.decide("commander", course.id, "approve");
+    assert.equal(approved.ok, true);
+    if (!approved.ok) return;
+    const tasked = approved.picture.courses.find((item) => item.id === course.id);
+    if (!tasked || isRedacted(tasked)) throw new Error("tasked course missing");
+    assert.equal(tasked.score?.autonomy, "rehearsal");
+    assert.equal(tasked.score?.permissions[0], "ecosystem");
+    const names = ARCHITECT_ACTIONS.map((item) => item.name);
+    assert.equal(names.includes("decide"), false);
+    const previous = process.env.ARCHITECT_PRODUCT_TOKEN;
+    const legacy = process.env.ARCHITCT_PRODUCT_TOKEN;
+    process.env.ARCHITECT_PRODUCT_TOKEN = "product-token";
+    delete process.env.ARCHITCT_PRODUCT_TOKEN;
+    try {
+      const missing = await handleArchitectRequest(new Request("http://local/architect/v1/actions/decide", {
+        method: "POST",
+        headers: { authorization: "Bearer product-token" },
+        body: "{}",
+      }), "decide");
+      assert.equal(missing.status, 404);
+    } finally {
+      if (previous === undefined) delete process.env.ARCHITECT_PRODUCT_TOKEN;
+      else process.env.ARCHITECT_PRODUCT_TOKEN = previous;
+      if (legacy === undefined) delete process.env.ARCHITCT_PRODUCT_TOKEN;
+      else process.env.ARCHITCT_PRODUCT_TOKEN = legacy;
+    }
+  });
+
+  it("refuses Architect when the product token is missing or wrong", async () => {
+    const previous = process.env.ARCHITECT_PRODUCT_TOKEN;
+    const legacy = process.env.ARCHITCT_PRODUCT_TOKEN;
+    delete process.env.ARCHITECT_PRODUCT_TOKEN;
+    delete process.env.ARCHITCT_PRODUCT_TOKEN;
+    try {
+      const open = await handleArchitectRequest(new Request("http://local/architect/v1/actions/file_note", {
+        method: "POST",
+        body: JSON.stringify({ payload: { role: "commander", note: "Tunnel mouth is clear." } }),
+      }), "file_note");
+      assert.equal(open.status, 401);
+      process.env.ARCHITCT_PRODUCT_TOKEN = "product-token";
+      const wrong = await handleArchitectRequest(new Request("http://local/architect/v1/actions/file_note", {
+        method: "POST",
+        headers: { authorization: "Bearer other" },
+        body: "{}",
+      }), "file_note");
+      assert.equal(wrong.status, 401);
+      const legacyOk = await handleArchitectRequest(new Request("http://local/architect/v1/actions", {
+        headers: { authorization: "Bearer product-token" },
+      }), "");
+      assert.equal(legacyOk.status, 200);
+    } finally {
+      if (previous === undefined) delete process.env.ARCHITECT_PRODUCT_TOKEN;
+      else process.env.ARCHITECT_PRODUCT_TOKEN = previous;
+      if (legacy === undefined) delete process.env.ARCHITCT_PRODUCT_TOKEN;
+      else process.env.ARCHITCT_PRODUCT_TOKEN = legacy;
+    }
+  });
+
   it("files a commander note the observer cannot read", async () => {
     const odin = await createOdin();
     const filed = await odin.observe("commander", "Tunnel mouth is clear.");
@@ -127,5 +235,18 @@ describe("ODIN° exercise backend", () => {
     const scene = await odin.ask("commander", "What is happening with the depot vehicle?");
     assert.match(scene.answer, /roster/i);
     assert.doesNotMatch(scene.answer, /weapon|strike|engage/i);
+  });
+
+  it("does not tell an observer how many secret messages the relay is holding", async () => {
+    const odin = await createOdin({ now: () => new Date("2026-11-05T00:00:00Z") });
+    const sent = await odin.sendTraffic("commander", "Harbor Civil", "QUORUM-77 stays off the open net");
+    assert.equal(sent.ok, true);
+    const observer = await odin.ask("observer", "Is any FABRIC traffic held on the mesh?");
+    assert.match(observer.answer, /degraded/i);
+    assert.doesNotMatch(observer.answer, /1 FABRIC|QUORUM-77/);
+    const commander = await odin.ask("commander", "Is the QUORUM-77 FABRIC traffic held on the mesh?");
+    assert.match(commander.answer, /1 FABRIC/);
+    const picture = await odin.picture("observer");
+    assert.ok(picture.ledger.every((entry) => !String(entry.summary ?? "").includes("QUORUM-77")));
   });
 });

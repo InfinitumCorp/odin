@@ -1,6 +1,7 @@
 import { Ledger, type RecordType } from "./firmament/ledger.ts";
 import { MemoryStore } from "./firmament/store.ts";
 import { generateSigner, type Signer } from "./firmament/keys.ts";
+import { composeScore, type RehearsalScore } from "./score.ts";
 import {
   CLASS_NAME,
   ROLE_ACTOR,
@@ -77,6 +78,8 @@ interface Course {
   status: "draft" | "approved" | "rejected" | "tasked" | "complete";
   classification: ClassLevel;
   alertId: string;
+  refusal?: string;
+  score?: RehearsalScore;
 }
 
 interface Task {
@@ -231,7 +234,7 @@ function seedWorld(): World {
       { id: "eidetic", name: "ei·det·ic™", layer: "Orient", state: "nominal", line: "Callsigns resolve only against the exercise roster.", classification: 3 },
       { id: "metatron", name: "METATRON™", layer: "Orient", state: "nominal", line: "Common picture for this exercise. Closed configuration.", classification: 1 },
       { id: "scalvs", name: "SCALVS.ai™", layer: "Decide", state: "nominal", line: "Drafts courses of action. It cannot approve them.", classification: 1 },
-      { id: "cndctr", name: "/CNDCTR/™", layer: "Decide", state: "nominal", line: "Turns an approved course into tasks. Commander approval first.", classification: 1 },
+      { id: "architect", name: ":\\ARCHITECT\\™", layer: "Decide", state: "nominal", line: "Turns an approved course into tasks. Commander approval first.", classification: 1 },
       { id: "aether", name: "ÆTHER™ MIL", layer: "Act", state: "degraded", line: "Mesh is up. East relay packet loss is elevated.", classification: 1 },
       { id: "fabric", name: "FABRIC™", layer: "Act", state: "nominal", line: "Secure voice and text across the mesh.", classification: 1 },
       { id: "eon", name: "E(O)N™", layer: "Act", state: "nominal", line: "Wearables on LANTERN teams are linked.", classification: 1 },
@@ -605,6 +608,8 @@ export class OdinService {
       summary: course.summary,
       steps: course.steps,
       status: course.status,
+      refusal: course.refusal ?? null,
+      score: course.score ?? null,
       classification: CLASS_NAME[course.classification],
     }));
     const tasks = this.gate(this.world.tasks, role, (task): TaskView => ({
@@ -737,13 +742,17 @@ export class OdinService {
     }
     if (/(mesh|relay|fabric|message|traffic)/.test(q)) {
       const relay = this.world.systems.find((item) => item.id === "aether");
-      const held = this.world.traffic.filter((item) => item.held).length;
-      lines.push(
-        relay?.state === "degraded"
-          ? `The east relay is degraded. ${held === 0 ? "New FABRIC™ messages will be held." : `${held} FABRIC™ ${held === 1 ? "message is" : "messages are"} held until the relay is restored.`}`
-          : "ÆTHER™ MIL is whole. FABRIC™ messages are going through.",
-      );
-      cites.push("aether");
+      if (!hidden(relay?.classification ?? 1, "The mesh")) {
+        const held = this.world.traffic.filter((item) => item.held && item.classification <= ceiling).length;
+        lines.push(
+          relay?.state === "degraded"
+            ? held === 0
+              ? "The east relay is degraded. New FABRIC™ messages will be held."
+              : `The east relay is degraded. ${held} FABRIC™ ${held === 1 ? "message is" : "messages are"} held until the relay is restored.`
+            : "ÆTHER™ MIL is whole. FABRIC™ messages are going through.",
+        );
+        cites.push("aether");
+      }
     }
     if (/(who|identity|callsign|lantern)/.test(q)) {
       if (!hidden(3, "The roster identity")) {
@@ -782,7 +791,7 @@ export class OdinService {
       actor: ROLE_ACTOR[role],
       subject: "ask",
       summary: `Asked the picture: ${question.slice(0, 180)}`,
-      classification: 1,
+      classification: ROLE_CLEARANCE[role],
     });
     await this.flush();
 
@@ -838,19 +847,26 @@ export class OdinService {
     }
     const remark = note?.trim();
     if (decision === "reject") {
+      const reason = remark || "The commander rejected the course. No reason was written.";
       course.status = "rejected";
+      course.refusal = reason;
+      const alert = this.world.alerts.find((item) => item.id === course.alertId);
+      if (alert && alert.courseId === course.id) {
+        alert.courseId = undefined;
+      }
       this.queue({
         type: "audit",
         signer: "commander",
         actor: ROLE_ACTOR.commander,
         subject: course.id,
-        summary: `Rejected “${course.title}”.${remark ? ` ${remark}` : ""}`,
-        classification: 2,
+        summary: `Rejected “${course.title}”. The situation is open again. ${reason}`,
+        classification: course.classification,
       });
       await this.flush();
       return { ok: true as const, picture: await this.picture(role, false) };
     }
     course.status = "tasked";
+    course.score = composeScore(course);
     for (const step of course.steps) {
       this.world.tasks.push({
         id: this.nextId("task"),
@@ -866,7 +882,7 @@ export class OdinService {
       signer: "commander",
       actor: ROLE_ACTOR.commander,
       subject: course.id,
-      summary: `Approved “${course.title}”. /CNDCTR/™ created the tasks.${remark ? ` ${remark}` : ""}`,
+      summary: `Approved “${course.title}”. :\\ARCHITECT\\™ composed a rehearsal score. It is not running.${remark ? ` ${remark}` : ""}`,
       classification: 2,
     });
     await this.flush();
@@ -999,7 +1015,7 @@ export class OdinService {
     this.queue({
       type: "attestation",
       signer: "system",
-      actor: "/CNDCTR/™",
+      actor: ":\\ARCHITECT\\™",
       subject: course.id,
       summary: `“${course.title}” is complete. The picture was updated.`,
       classification: course.classification,

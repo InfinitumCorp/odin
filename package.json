@@ -2,8 +2,18 @@
   "name": "odin",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.18" },
+  "engines": {
+    "node": ">=22.18"
+  },
   "scripts": {
-    "test": "node --experimental-strip-types --test src/lib/odin/service.test.ts"
+    "test": "node --experimental-strip-types --test src/lib/odin/service.test.ts src/lib/odin/eon.test.ts src/labyrinth/labyrinth.test.ts",
+    "typecheck:labyrinth": "tsc --noEmit --strict --skipLibCheck --target ES2022 --module NodeNext --moduleResolution NodeNext --allowImportingTsExtensions src/labyrinth/*.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.0"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
   }
 }

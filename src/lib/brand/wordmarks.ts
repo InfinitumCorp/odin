@@ -5,7 +5,7 @@
  */
 
 export type ProductId =
-  | "argus" | "cndctr" | "scalvs" | "flower" | "nemesis" | "orbis" | "pollen"
+  | "argus" | "architect" | "scalvs" | "flower" | "nemesis" | "orbis" | "pollen"
   | "eidetic" | "hrvst" | "metatron" | "spectre" | "odin" | "aether" | "aether-mil"
   | "eon" | "fabric" | "veil" | "firm" | "firm-wallet" | "firmament" | "cumulus-cloud"
   | "cumulus-id" | "throne" | "throne-mil";
@@ -22,7 +22,7 @@ export interface Wordmark {
 
 export const WORDMARKS: readonly Wordmark[] = [
   { id: "argus", name: "Argus", mark: ">_ARGUS" },
-  { id: "cndctr", name: "Conductor", mark: "/CNDCTR/" },
+  { id: "architect", name: "Architect", mark: ":\\ARCHITECT\\" },
   { id: "scalvs", name: "Scalvs", mark: "SCALVS.ai" },
   { id: "flower", name: "Flower", mark: "Flower" },
   { id: "nemesis", name: "Nemesis", mark: "NEMESIS" },
