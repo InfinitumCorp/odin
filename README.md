@@ -59,6 +59,23 @@ npx wrangler secret put EON_ACCESS_CLIENT_SECRET
 
 `EON_FEED_URL` overrides the feed URL. With no token, or if the feed is down or sends bad JSON, the picture still works and says the E(O)N™ feed is not connected. The TanStack server functions read the same names from `process.env`. Never commit the token.
 
+## Geo routing
+
+Geo routing is off unless an operator turns it on. While it is off, the exercise picture, ledger text, and message delivery stay as they are. There is no settings screen. The shipped default is `config/odin.json` (`geoRouting: false`). The CLI saves the operator's choice in `data/settings.json`, which is not committed.
+
+The datasets are v2fly only. Loyalsoldier and sing-box builds are not used. `npm run fetch-geo` checks each file against the official `.sha256sum` asset and `geo/geo.lock.json`, then writes `data/geo/geoip.dat` and `data/geo/geosite.dat`. A checksum mismatch stops and does not keep the file. The `.dat` files are not committed. Attribution is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+```bash
+npm run fetch-geo
+npm run geo -- --geo on
+npm run geo -- --geo off
+npm run geo -- --geo status
+```
+
+`INFINITUM_GEO_ENABLED` (`on`/`off`, `1`/`0`, `true`/`false`) overrides the saved choice for that process. On a Worker it is the same binding name. It is not a secret.
+
+When the switch is on, a FABRIC™ message, field note, or picture question that contains an IP or domain gets a country and category note on the private ledger. Delivery, holding, and approval do not change. Unknown text is left alone. If the datasets are missing, the note is skipped.
+
 ## Handoff
 
 [handoff/](handoff/README.md) is a record of this backend for another model. It is not the running service. Import `brief`, `WORK`, `API`, and `RULES` from `handoff/odin_work.ts`, `handoff/odin_work.js`, or `handoff/odin_work.py`.

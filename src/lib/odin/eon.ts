@@ -22,6 +22,8 @@ export interface EonEnv {
   EON_FEED_URL?: string;
   EON_ACCESS_CLIENT_ID?: string;
   EON_ACCESS_CLIENT_SECRET?: string;
+  /** Opt-in geo routing. Unset or off leaves the exercise picture unchanged. */
+  INFINITUM_GEO_ENABLED?: string;
 }
 
 export type EonState = "connected" | "not-configured" | "down" | "bad-feed";

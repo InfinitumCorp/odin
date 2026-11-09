@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { encodeGeoIpList, encodeGeoSiteList, loadGeoCatalog } from "../geo/dat.ts";
+import { classifyText } from "../geo/policy.ts";
+import type { GeoRouter } from "../geo/router.ts";
 import { createOdin } from "./service.ts";
 import { projectFeeds } from "./feeds.ts";
 import { ARCHITECT_ACTIONS, handleArchitectRequest } from "./architect.ts";
@@ -248,5 +251,43 @@ describe("ODIN° exercise backend", () => {
     assert.match(commander.answer, /1 FABRIC/);
     const picture = await odin.picture("observer");
     assert.ok(picture.ledger.every((entry) => !String(entry.summary ?? "").includes("QUORUM-77")));
+  });
+
+  it("keeps the default FABRIC sentence when geo routing is off and annotates a match when it is on", async () => {
+    const catalog = loadGeoCatalog(
+      encodeGeoIpList([{ code: "ZZ", cidrs: [{ ip: "203.0.113.0", prefix: 24 }] }]),
+      encodeGeoSiteList([{ code: "example", domains: [{ type: "domain", value: "example.test" }] }]),
+    );
+    const geo: GeoRouter = { annotate: (text) => Promise.resolve(classifyText(catalog, text)) };
+    const off = await createOdin();
+    const plain = await off.sendTraffic("analyst", "203.0.113.10", "see www.example.test");
+    assert.equal(plain.ok, true);
+    if (!plain.ok) return;
+    const offSummary = plain.picture.ledger.find((entry) => (entry.summary ?? "").includes("203.0.113.10"));
+    assert.equal(offSummary?.summary, "FABRIC™ to 203.0.113.10 is held by the east relay.");
+
+    const on = await createOdin({ geo });
+    const sent = await on.sendTraffic("analyst", "203.0.113.10", "see www.example.test");
+    assert.equal(sent.ok, true);
+    if (!sent.ok) return;
+    const noted = sent.picture.ledger.find((entry) => (entry.summary ?? "").includes("Geo routing"));
+    assert.equal(
+      noted?.summary,
+      "FABRIC™ to 203.0.113.10 is held by the east relay. Geo routing: 203.0.113.10 country ZZ; www.example.test category example.",
+    );
+    const message = sent.picture.traffic.find((item) => !isRedacted(item) && item.to === "203.0.113.10");
+    if (!message || isRedacted(message)) throw new Error("message missing");
+    assert.equal(message.held, true);
+    assert.equal(message.body, "see www.example.test");
+    const quiet = await on.sendTraffic("analyst", "Harbor Civil", "No address here.");
+    assert.equal(quiet.ok, true);
+    if (!quiet.ok) return;
+    const quietSummary = quiet.picture.ledger.find((entry) => (entry.summary ?? "").includes("Harbor Civil"));
+    assert.equal(quietSummary?.summary, "FABRIC™ to Harbor Civil is held by the east relay.");
+    const asked = await on.ask("analyst", "Where is www.example.test?");
+    assert.doesNotMatch(asked.answer, /Geo routing/);
+    const observer = await on.picture("observer");
+    const hidden = observer.ledger.map((entry) => entry.summary ?? "").join("\n");
+    assert.doesNotMatch(hidden, /203\.0\.113\.10|example\.test|Geo routing/);
   });
 });
