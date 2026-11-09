@@ -85,7 +85,7 @@ export function OdinConsole() {
         ODIN°<sup className="tm">™</sup>
       </h1>
       <p className="lead mt-6 text-ink">
-        One command picture for the exercise. AI-powered. Blockchain-governed™. Human-commanded.
+        <Rich text="One command picture for the exercise. AI-powered. Blockchain-governed™. Human-commanded." />
       </p>
       <p className="body mt-4 text-muted">
         Exercise NORTHLANTERN is simulated. It is not for operational use. Mission data stays on a private
@@ -427,7 +427,7 @@ function DecideView({
   return (
     <div className="mt-10">
       <p className="body text-muted">
-        SCALVS.ai™ drafts. :\ARCHITECT\™ tasks only after the commander approves. Nothing here is a use of force.
+        <Rich text="SCALVS.ai™ drafts. :\\ARCHITECT\\™ tasks only after the commander approves. Nothing here is a use of force." />
       </p>
       <button
         type="button"
@@ -452,7 +452,7 @@ function DecideView({
               {course.refusal ? <p className="body mt-4 text-muted">{course.refusal}</p> : null}
               {course.score ? (
                 <p className="body mt-4 text-muted">
-                  :\ARCHITECT\™ composed a rehearsal score. It is not running.
+                  <Rich text=":\\ARCHITECT\\™ composed a rehearsal score. It is not running." />
                 </p>
               ) : null}
               <ul className="mt-4 flex flex-col gap-2">
@@ -579,7 +579,9 @@ function RecordView({
           onSend();
         }}
       >
-        <h2 className="h3">Send on FABRIC™</h2>
+        <h2 className="h3">
+          <Rich text="Send on FABRIC™" />
+        </h2>
         <input
           value={to}
           onChange={(event) => onTo(event.target.value)}

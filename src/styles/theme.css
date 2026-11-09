@@ -1,0 +1,17 @@
+/*
+ * ODIN°™ console stylesheet. Import this once at the app root.
+ * brand.css is a copy of infinitum-nexus/packages/brand/brand.css — do not edit it here.
+ * The @theme block maps the brand tokens to the Tailwind utilities the console uses
+ * (text-ink, text-muted, bg-paper, border-line, bg-ink, text-paper).
+ */
+@import "tailwindcss";
+@import "./brand.css";
+
+@theme {
+  --color-ink: #111820;
+  --color-muted: #52606b;
+  --color-line: #d6dce1;
+  --color-accent: #2454dd;
+  --color-paper: #ffffff;
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}

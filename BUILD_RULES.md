@@ -43,7 +43,7 @@ All product UIs follow this site: clean, white, calm and content-first (in the s
   | Pollen | `POLLEN™` |
   | Eidetic | `ei·det·ic™` |
   | Harvest | `[HRVST]™` |
-  | Metatron | `METATRON™` |
+  | Metatron | `METATRON¹⁰⁰™` |
   | Spectre | `+SPCTR™` |
   | Odin | `ODIN°™` |
   | Aether | `ÆTHER™` |
