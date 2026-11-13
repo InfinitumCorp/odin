@@ -6,7 +6,9 @@
     "node": ">=22.18"
   },
   "scripts": {
-    "test": "node --experimental-strip-types --test src/lib/odin/service.test.ts src/lib/odin/eon.test.ts src/labyrinth/labyrinth.test.ts",
+    "test": "node --experimental-strip-types --test src/lib/odin/service.test.ts src/lib/odin/eon.test.ts src/labyrinth/labyrinth.test.ts src/lib/geo/dat.test.ts src/lib/geo/settings.test.ts src/lib/geo/fetch.test.ts",
+    "fetch-geo": "node --experimental-strip-types scripts/fetch-geo.ts",
+    "geo": "node --experimental-strip-types src/cli.ts",
     "typecheck:labyrinth": "tsc --noEmit --strict --skipLibCheck --target ES2022 --module NodeNext --moduleResolution NodeNext --allowImportingTsExtensions src/labyrinth/*.ts"
   },
   "devDependencies": {

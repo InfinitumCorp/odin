@@ -1,3 +1,4 @@
+import { createLiveGeoRouter } from "../geo/router.ts";
 import { createOdin, type OdinService } from "./service.ts";
 import { EonSource, type EonEnv } from "./eon.ts";
 
@@ -5,7 +6,7 @@ let booting: Promise<OdinService> | null = null;
 
 export function getOdin(): Promise<OdinService> {
   if (!booting) {
-    booting = createOdin().catch((error: unknown) => {
+    booting = createOdin({ geo: createLiveGeoRouter() }).catch((error: unknown) => {
       booting = null;
       throw error;
     });

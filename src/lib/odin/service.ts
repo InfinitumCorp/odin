@@ -1,3 +1,4 @@
+import { GEO_OFF, type GeoRouter } from "../geo/router.ts";
 import { Ledger, type RecordType } from "./firmament/ledger.ts";
 import { MemoryStore } from "./firmament/store.ts";
 import { generateSigner, type Signer } from "./firmament/keys.ts";
@@ -117,6 +118,10 @@ interface Pending {
   subject: string;
   summary: string;
   classification: ClassLevel;
+  geo?: {
+    country: string | null;
+    categories: string[];
+  };
 }
 
 interface World {
@@ -370,11 +375,13 @@ export class OdinService {
   private readonly ledger: Ledger;
   private readonly signers: OdinSigners;
   private readonly now: () => Date;
+  private readonly geo: GeoRouter;
 
-  constructor(ledger: Ledger, signers: OdinSigners, now: () => Date) {
+  constructor(ledger: Ledger, signers: OdinSigners, now: () => Date, geo: GeoRouter = GEO_OFF) {
     this.ledger = ledger;
     this.signers = signers;
     this.now = now;
+    this.geo = geo;
     this.lastReal = now().getTime();
     const opened = now().toISOString();
     const opening = this.world.traffic[0];
@@ -433,11 +440,21 @@ export class OdinService {
           payload: {
             summary: entry.summary,
             classification: CLASS_NAME[entry.classification],
+            ...(entry.geo ? { geo: entry.geo } : {}),
           },
         },
         this.signers[entry.signer],
       );
     }
+  }
+
+  private async noteGeo(summary: string, text: string): Promise<{ summary: string; geo?: Pending["geo"] }> {
+    const annotation = await this.geo.annotate(text);
+    if (!annotation) return { summary };
+    return {
+      summary: `${summary} ${annotation.line}`,
+      geo: { country: annotation.country, categories: annotation.categories },
+    };
   }
 
   private nextId(prefix: string) {
@@ -785,13 +802,15 @@ export class OdinService {
       if (first && "title" in first) lines.push(first.detail);
     }
 
+    const asked = await this.noteGeo(`Asked the picture: ${question.slice(0, 180)}`, question);
     this.queue({
       type: "audit",
       signer: role,
       actor: ROLE_ACTOR[role],
       subject: "ask",
-      summary: `Asked the picture: ${question.slice(0, 180)}`,
+      summary: asked.summary,
       classification: ROLE_CLEARANCE[role],
+      geo: asked.geo,
     });
     await this.flush();
 
@@ -1038,15 +1057,18 @@ export class OdinService {
       classification: 2,
     };
     this.world.traffic.unshift(message);
+    const sent = await this.noteGeo(
+      message.held ? `FABRIC™ to ${to} is held by the east relay.` : `FABRIC™ to ${to}: ${body.slice(0, 180)}`,
+      `${to}\n${body}`,
+    );
     this.queue({
       type: "audit",
       signer: role,
       actor: ROLE_ACTOR[role],
       subject: message.id,
-      summary: message.held
-        ? `FABRIC™ to ${to} is held by the east relay.`
-        : `FABRIC™ to ${to}: ${body.slice(0, 180)}`,
+      summary: sent.summary,
       classification: 2,
+      geo: sent.geo,
     });
     await this.flush();
     return { ok: true as const, picture: await this.picture(role, false) };
@@ -1062,13 +1084,15 @@ export class OdinService {
       classification: ROLE_CLEARANCE[role],
     };
     this.world.observations.unshift(item);
+    const filed = await this.noteGeo(`Field note from ${item.author}: ${note.slice(0, 180)}`, note);
     this.queue({
       type: "provenance",
       signer: role,
       actor: "[HRVST]™",
       subject: item.id,
-      summary: `Field note from ${item.author}: ${note.slice(0, 180)}`,
+      summary: filed.summary,
       classification: item.classification,
+      geo: filed.geo,
     });
     await this.flush();
     return { ok: true as const, picture: await this.picture(role, false) };
@@ -1079,8 +1103,9 @@ export class OdinService {
   }
 }
 
-export async function createOdin(options?: { now?: () => Date }) {
+export async function createOdin(options?: { now?: () => Date; geo?: GeoRouter }) {
   const now = options?.now ?? (() => new Date());
+  const geo = options?.geo ?? GEO_OFF;
   const signers: OdinSigners = {
     system: generateSigner(),
     observer: generateSigner(),
@@ -1091,7 +1116,7 @@ export async function createOdin(options?: { now?: () => Date }) {
     authorizedSigners: Object.values(signers).map((signer) => signer.publicKey),
     clock: now,
   });
-  const service = new OdinService(ledger, signers, now);
+  const service = new OdinService(ledger, signers, now, geo);
   await service.bootstrap();
   return service;
 }
